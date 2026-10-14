@@ -1,0 +1,39 @@
+<Project>
+
+  <!--
+    pcopt-suite 统一工程属性。
+    所有项目共享；个别项目可在自身 csproj 中覆盖（如 TFM、UseWPF）。
+  -->
+  <PropertyGroup>
+    <!-- 语言与编译 -->
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+
+    <!-- 版本与署名 -->
+    <Version>0.1.0</Version>
+    <Company>pcopt-suite contributors</Company>
+    <Authors>pcopt-suite contributors</Authors>
+    <Product>pcopt-suite</Product>
+    <Copyright>Copyright (c) 2026 pcopt-suite contributors. Licensed under the MIT License.</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <NeutralLanguage>zh-CN</NeutralLanguage>
+
+    <!-- 输出目录隔离，避免多项目 bin 互相污染 -->
+    <BaseOutputPath>bin\</BaseOutputPath>
+    <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+
+    <!--
+      警告抑制（均有据可查）：
+      CA1416：本套件仅面向 Windows 运行（Win10 22H2 / Win11 23H2+）。PcOpt.Core 以 net9.0
+        编译（便于未来评估 NativeAOT / 跨平台复用），但注册表 / SCM / powercfg / ntdll 等
+        Win32 API 调用属预期行为，故按项目范围抑制该平台兼容性警告。
+      CA1707：测试方法采用 下划线可读命名 约定（xUnit 社区惯例）。
+    -->
+    <NoWarn>$(NoWarn);CA1416;CA1707</NoWarn>
+  </PropertyGroup>
+
+</Project>

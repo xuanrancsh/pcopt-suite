@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>PcOpt.Core</RootNamespace>
+    <AssemblyName>PcOpt.Core</AssemblyName>
+    <Description>pcopt-suite 共享内核：tweak 引擎 / 还原日志 / 系统 API 封装（零 UI 依赖）</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 日志抽象（架构 8.3：Microsoft.Extensions.Logging） -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
+    <!-- 注册表访问（.NET 平台组件，仅 Windows 运行时有实现） -->
+    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+    <!-- Ed25519 规则包签名验证（RFC 8032；.NET BCL 无内置 Ed25519，故引入此库，见 NOTICE） -->
+    <PackageReference Include="NSec.Cryptography" Version="26.4.0" />
+    <!-- YAML 规则包解析 -->
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+  </ItemGroup>
+
+</Project>

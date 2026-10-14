@@ -1,0 +1,74 @@
+# NOTICE — 第三方署名与致谢
+
+pcopt-suite 采用 MIT 许可证发布（见根目录 `LICENSE`）。
+本文件依据《03-开源计划.md》第 3 章维护：列出所有**直接依赖**、**开发/测试依赖**、
+**计划集成**与**功能参考**项目的名称、许可证与用途。集成任何第三方库前必须先在此登记。
+
+## 直接依赖（编译进产品）
+
+| 项目 | 作者 / 组织 | 仓库 | 许可证 | 用途 |
+|---|---|---|---|---|
+| WPF-UI (lepoco/wpf-ui) | lescps | https://github.com/lepoco/wpfui | MIT | Fluent UI 组件、Mica/云母、深浅色主题 |
+| CommunityToolkit.Mvvm | .NET Foundation | https://github.com/CommunityToolkit/dotnet | MIT | MVVM 基础设施（源码生成器） |
+| Microsoft.Extensions.DependencyInjection | Microsoft | https://github.com/dotnet/runtime | MIT | 依赖注入容器 |
+| Microsoft.Extensions.Logging.Abstractions | Microsoft | https://github.com/dotnet/runtime | MIT | 日志抽象（内核日志约定，架构 8.3） |
+| YamlDotNet | Antoine Aubry | https://github.com/aaubry/YamlDotNet | MIT | YAML 规则包解析 |
+| NSec.Cryptography | ektrah | https://github.com/ektrah/nsec | BSD-3-Clause | Ed25519 规则包签名验证（libsodium 实现） |
+| Microsoft.Win32.Registry | Microsoft | https://github.com/dotnet/runtime | MIT | 注册表访问（.NET 平台组件） |
+
+> NSec.Cryptography 为 BSD-3-Clause 许可证，仅作为 NuGet 依赖调用、未修改其源码；
+> 依据 BSD-3 条款保留其版权声明（见上文链接仓库 LICENSE）。
+
+## 开发 / 测试依赖（不随产品分发）
+
+| 项目 | 许可证 | 用途 |
+|---|---|---|
+| xUnit | Apache-2.0 | 单元测试框架 |
+| FluentAssertions | Apache-2.0 | 断言库 |
+| Moq | BSD-3-Clause | 测试替身（mock） |
+| Microsoft.NET.Test.Sdk | MIT | 测试宿主 |
+
+## 计划集成（尚未引入，集成前完成许可证核验并回填本表）
+
+| 项目 | 许可证 | 用途 | 计划任务 |
+|---|---|---|---|
+| LibreHardwareMonitorLib | MPL-2.0 | 硬件传感器（作依赖调用；集成前核验） | T6 |
+| PresentMon (Intel) | MIT | 帧时间捕获（子进程附带二进制） | T32 |
+
+## 功能参考项目（致谢）
+
+以下项目对本产品的架构与功能设计有启发意义。复制代码仅限 MIT / Apache-2.0 / BSD 系
+并保留原版权声明；GPL / source-available 系项目**仅思路参考、无任何代码复制**
+（《03-开源计划.md》2.3 借鉴边界铁律）。
+
+**MIT / Apache-2.0 / BSD 系（可借鉴，保留声明）：**
+
+- GameShift (MIT) — state journal 与反作弊自动降级架构重点参考
+- winutil (MIT) — preset 分层、tweak 组织方式
+- Win11Debloat (MIT) — tweak 组织方式
+- Sophia Script / SophiApp (MIT) — tweak/还原配对、VAC 友好声明
+- privacy.sexy (MIT) — 脚本组织方式
+- PresentMon (MIT) — 产品 C 核心依赖（子进程集成）
+- CapFrameX (MIT) — 帧时间报告观感参考
+- BCU (Apache-2.0) — Steam 游戏识别、卸载残留扫描思路
+
+**GPL / PolyForm / source-available 系（仅思路参考，禁止复制代码）：**
+
+- Atlas、optimizerDuck、optimizerNXT、memreduct、simplewall、NexBox（GPL 系）
+- Winhance（PolyForm Shield，非 OSI）
+- Dism++（仓库仅多语言资源，主程序源码未完整开源 — 仅功能标杆参考）
+
+**待核验项（复制前必须逐项核验许可证）：**
+
+- privatezilla、RyTuneX、fps-booster、MPO-GPU-FIX（自定义 / 待核验）
+
+## 合规承诺（PRD 第 6 章红线，源码可验证）
+
+1. 不做显卡型号伪装：GPU 类注册表键**只读**（`ComplianceGuard` 路径黑名单 + 自动化测试断言）；
+2. 不注入游戏进程：无 DLL 注入 / 远程线程 / 驱动级 hook 代码；
+3. 不改游戏文件：不访问游戏目录；
+4. 不 hook 内存：不读写任何游戏进程内存；
+5. 检测到内核级反作弊时进程调度类操作自动降级 IFEO 注册表方案；
+6. Defender / 自动更新类 tweak 默认折叠且默认关闭；
+7. 所有 tweak 可还原：先写 Journal 后执行，LIFO 还原；
+8. 无遥测、无广告、纯本地：除更新检查（默认关闭）外无网络请求。

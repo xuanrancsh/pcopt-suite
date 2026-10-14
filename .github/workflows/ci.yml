@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+# 权限最小化（开源计划 6.3）
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: build & test (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 9 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore pcopt-suite.sln
+
+      - name: Build (Release)
+        run: dotnet build pcopt-suite.sln -c Release --no-restore
+
+      - name: Test (Release)
+        run: dotnet test tests/PcOpt.Core.Tests -c Release --no-build --logger "console;verbosity=detailed"

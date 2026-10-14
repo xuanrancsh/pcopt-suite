@@ -1,0 +1,27 @@
+<ui:FluentWindow x:Class="PcOpt.Products.FrameLab.MainWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="帧验 FrameLab"
+                 Width="1100" Height="720"
+                 WindowStartupLocation="CenterScreen"
+                 ExtendsContentIntoTitleBar="True"
+                 WindowBackdropType="Mica">
+    <Grid>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="帧验 FrameLab（产品 C）"
+                       FontSize="28"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="骨架阶段：先测量、再优化、前后对比报告，用数据证明每项调整有没有用。"
+                       FontSize="14"
+                       Opacity="0.7"
+                       Margin="0,8,0,0"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="界面与功能在阶段 3 开发（见 docs/04-架构设计.md 任务 T31-T37）。"
+                       FontSize="12"
+                       Opacity="0.5"
+                       Margin="0,16,0,0"
+                       HorizontalAlignment="Center" />
+        </StackPanel>
+    </Grid>
+</ui:FluentWindow>

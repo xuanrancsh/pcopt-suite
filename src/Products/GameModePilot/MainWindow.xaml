@@ -1,0 +1,27 @@
+<ui:FluentWindow x:Class="PcOpt.Products.GameModePilot.MainWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="GameMode Pilot"
+                 Width="960" Height="600"
+                 WindowStartupLocation="CenterScreen"
+                 ExtendsContentIntoTitleBar="True"
+                 WindowBackdropType="Mica">
+    <Grid>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="GameMode Pilot（产品 A）"
+                       FontSize="28"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="骨架阶段：检测到游戏启动，自动进入战斗状态；退出游戏，全部自动还原。"
+                       FontSize="14"
+                       Opacity="0.7"
+                       Margin="0,8,0,0"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="界面与功能在阶段 1 开发（见 docs/04-架构设计.md 任务 T12-T19）。"
+                       FontSize="12"
+                       Opacity="0.5"
+                       Margin="0,16,0,0"
+                       HorizontalAlignment="Center" />
+        </StackPanel>
+    </Grid>
+</ui:FluentWindow>

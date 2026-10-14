@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>PcOpt.UI</RootNamespace>
+    <AssemblyName>PcOpt.UI</AssemblyName>
+    <Description>pcopt-suite 共享 WPF 组件库（WPF-UI Fluent 组件 + 主题服务）</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WPF-UI" Version="4.0.2" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PcOpt.Core\PcOpt.Core.csproj" />
+  </ItemGroup>
+
+</Project>

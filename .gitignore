@@ -1,0 +1,70 @@
+# ---------- .NET 构建产物 ----------
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.sln.ide/
+.vs/
+*.csproj.user
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ---------- 发布 / 打包 ----------
+publish/
+AppPackages/
+*.appx
+*.appxbundle
+*.appxupload
+*.msix
+*.msixbundle
+*.nupkg
+*.snupkg
+
+# ---------- 测试 ----------
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# ---------- NuGet ----------
+packages/
+*.nupkg
+!nuget.config
+
+# ---------- 密钥与隐私（开源计划 6.6：绝不入库） ----------
+*.pfx
+*.snk
+secrets.json
+*.env
+.local/
+
+# ---------- 本地用户数据（还原日志 / 配置 / 日志） ----------
+**/journal/
+pcopt-journal/
+*.log
+
+# ---------- 系统 / 编辑器 ----------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+.idea/
+*.swp
+*~
+
+# ---------- Node / 前端（若未来附带工具链） ----------
+node_modules/
+dist/
+
+# ---------- 本地项目数据（含签名私钥，严禁入库） ----------
+.workbuddy/
+*.sig.private
+private-key*.txt
+!rules/public.key

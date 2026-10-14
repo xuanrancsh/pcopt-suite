@@ -1,0 +1,44 @@
+<!--
+  PcOpt.UI 默认控件样式（WPF 自定义控件约定：Themes/Generic.xaml 自动发现）。
+  后续 P0 组件（TweakCard / ConfirmDialog / ToastHost 等）的默认样式在此追加；
+  主题相关颜色在 T11 接入设计 Token（PRD 5.2）后统一收敛。
+-->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:PcOpt.UI.Controls">
+
+    <Style TargetType="{x:Type local:RiskBadge}">
+        <Setter Property="Height" Value="22" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:RiskBadge}">
+                    <Border x:Name="PART_Border"
+                            Background="#22C55E"
+                            CornerRadius="4"
+                            SnapsToDevicePixels="True">
+                        <TextBlock x:Name="PART_Label"
+                                   Text="{Binding RiskText, RelativeSource={RelativeSource TemplatedParent}}"
+                                   Foreground="White"
+                                   FontSize="12"
+                                   Margin="8,0" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <!-- 注意 = 琥珀 #F59E0B -->
+                        <Trigger Property="Risk" Value="Notice">
+                            <Setter TargetName="PART_Border" Property="Background" Value="#F59E0B" />
+                        </Trigger>
+                        <!-- 危险 = 红 #EF4444 -->
+                        <Trigger Property="Risk" Value="Danger">
+                            <Setter TargetName="PART_Border" Property="Background" Value="#EF4444" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

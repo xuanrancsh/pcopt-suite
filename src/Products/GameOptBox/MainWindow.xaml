@@ -1,0 +1,27 @@
+<ui:FluentWindow x:Class="PcOpt.Products.GameOptBox.MainWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="游优化 GameOptBox"
+                 Width="1100" Height="720"
+                 WindowStartupLocation="CenterScreen"
+                 ExtendsContentIntoTitleBar="True"
+                 WindowBackdropType="Mica">
+    <Grid>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="游优化 GameOptBox（产品 B）"
+                       FontSize="28"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="骨架阶段：一个顶十个的游戏工具箱，每项调整说人话、带风险等级、可一键还原。"
+                       FontSize="14"
+                       Opacity="0.7"
+                       Margin="0,8,0,0"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="界面与功能在阶段 2 开发（见 docs/04-架构设计.md 任务 T20-T30）。"
+                       FontSize="12"
+                       Opacity="0.5"
+                       Margin="0,16,0,0"
+                       HorizontalAlignment="Center" />
+        </StackPanel>
+    </Grid>
+</ui:FluentWindow>

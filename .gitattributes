@@ -1,0 +1,15 @@
+# git 属性：统一换行符策略（Windows 开发 + 跨平台协作者）
+* text=auto eol=crlf
+
+# 二进制与密钥类文件不参与换行转换
+*.pfx binary
+*.snk binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.exe binary
+*.dll binary
+*.pow binary
+
+# 规则包按内容逐行校验（YAML 签名校验 CI 依赖稳定字节）
+rules/** -text
