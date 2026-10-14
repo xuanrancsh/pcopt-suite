@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>PcOpt.UI.Demo</RootNamespace>
+    <AssemblyName>PcOpt.UI.Demo</AssemblyName>
+    <Description>PcOpt.UI P0 组件库走查 Demo（PRD 第 5 章规范验收用）</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\PcOpt.UI\PcOpt.UI.csproj" />
+  </ItemGroup>
+
+</Project>

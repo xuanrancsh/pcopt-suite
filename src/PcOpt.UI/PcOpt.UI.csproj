@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net9.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <!-- TrayService 基于 System.Windows.Forms.NotifyIcon（WPF 应用标准做法） -->
+    <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>PcOpt.UI</RootNamespace>
     <AssemblyName>PcOpt.UI</AssemblyName>
     <Description>pcopt-suite 共享 WPF 组件库（WPF-UI Fluent 组件 + 主题服务）</Description>

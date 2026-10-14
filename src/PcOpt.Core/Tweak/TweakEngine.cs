@@ -106,7 +106,9 @@ public sealed class TweakEngine
     }
 
     /// <summary>
-    /// 加载签名规则包：先验签（未签名 / 签名不符 → 拒绝执行），通过后解析注册（架构 3.5）。
+    /// 加载签名规则包：先验签（未签名 / 签名不符 → 拒绝执行），通过后执行
+    /// <see cref="OfficialRulePolicy"/> 官方包内容策略（合规红线 #9：不得含不可自动还原的动作），
+    /// 最后解析注册（架构 3.5）。
     /// </summary>
     /// <param name="content">YAML 原始字节。</param>
     /// <param name="signature">.sig 分离签名字节；为 null 或空视为未签名，拒绝加载。</param>
@@ -124,7 +126,21 @@ public sealed class TweakEngine
             return Result<TweakRule>.Fail(verify.Error);
         }
 
-        return LoadRuleFromYaml(Encoding.UTF8.GetString(content));
+        // 合规红线 #9：官方签名包只含可自动还原的动作（Shell / powercfg 删除计划等一律拒绝）
+        var parsed = TweakRuleParser.Parse(Encoding.UTF8.GetString(content));
+        if (!parsed.IsSuccess)
+        {
+            return Result<TweakRule>.Fail(parsed.Error);
+        }
+
+        var policyCheck = OfficialRulePolicy.ValidateRule(parsed.Value!);
+        if (!policyCheck.IsSuccess)
+        {
+            _logger.LogWarning("官方规则包被红线 #9 策略拒绝：{Error}", policyCheck.Error);
+            return Result<TweakRule>.Fail(policyCheck.Error);
+        }
+
+        return RegisterRule(parsed.Value!);
     }
 
     /// <summary>

@@ -1,0 +1,458 @@
+# pcopt-suite 游戏数据库（架构 3.4 / T7）
+# 字段说明：
+#   id              游戏唯一 Id（小写英文，社区 PR 增补时保持稳定）
+#   name            中文人话名（PRD 5.3）
+#   executables     可执行文件名（不含路径，ETW 匹配用；大小写不敏感）
+#   platforms       通常安装平台（Steam/Epic/Gog/Xbox/WeGame/Unknown=平台外启动器如 Riot/Battle.net）
+#   antiCheat       已知反作弊产品（None|Vac|EasyAntiCheat|BattlEye|Vanguard|Ricochet|TencentAce|Faceit|Unknown）
+#                   —— Unknown = 已知使用反作弊但不在特征库覆盖范围；运行时以 T9 检测为准
+#   recommendedTier 推荐硬件档位（Low|Mid|High|Ultra；T6 HardwareTierEstimator 输出对齐）
+# 维护规范：新增游戏必须提供确定的可执行文件名；不确定的宁可暂不收录（ETW 误匹配比漏匹配更糟）。
+
+- id: cs2
+  name: 反恐精英 2
+  executables: [cs2.exe]
+  platforms: [Steam]
+  antiCheat: Vac
+  recommendedTier: High
+
+- id: dota2
+  name: Dota 2
+  executables: [dota2.exe]
+  platforms: [Steam]
+  antiCheat: Vac
+  recommendedTier: Mid
+
+- id: tf2
+  name: 军团要塞 2
+  executables: [hl2.exe]
+  platforms: [Steam]
+  antiCheat: Vac
+  recommendedTier: Low
+
+- id: left4dead2
+  name: 求生之路 2
+  executables: [left4dead2.exe]
+  platforms: [Steam]
+  antiCheat: Vac
+  recommendedTier: Low
+
+- id: pubg
+  name: 绝地求生
+  executables: [TslGame.exe]
+  platforms: [Steam]
+  antiCheat: BattlEye
+  recommendedTier: High
+
+- id: valorant
+  name: 无畏契约
+  executables: [VALORANT.exe]
+  platforms: [Unknown]
+  antiCheat: Vanguard
+  recommendedTier: High
+
+- id: lol
+  name: 英雄联盟
+  executables: ["League of Legends.exe"]
+  platforms: [Unknown]
+  antiCheat: Vanguard
+  recommendedTier: Mid
+
+- id: gta5
+  name: 侠盗猎车手 5
+  executables: [GTA5.exe, GTA5_Enhanced.exe]
+  platforms: [Steam, Epic]
+  antiCheat: BattlEye
+  recommendedTier: High
+
+- id: rdr2
+  name: 荒野大镖客 2
+  executables: [RDR2.exe]
+  platforms: [Steam, Epic]
+  antiCheat: BattlEye
+  recommendedTier: High
+
+- id: cyberpunk2077
+  name: 赛博朋克 2077
+  executables: [Cyberpunk2077.exe]
+  platforms: [Steam, Gog]
+  antiCheat: None
+  recommendedTier: High
+
+- id: witcher3
+  name: 巫师 3
+  executables: [witcher3.exe]
+  platforms: [Steam, Gog]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: eldenring
+  name: 艾尔登法环
+  executables: [eldenring.exe]
+  platforms: [Steam]
+  antiCheat: EasyAntiCheat
+  recommendedTier: High
+
+- id: sekiro
+  name: 只狼
+  executables: [sekiro.exe]
+  platforms: [Steam]
+  antiCheat: EasyAntiCheat
+  recommendedTier: High
+
+- id: darksouls3
+  name: 黑暗之魂 3
+  executables: [DarkSoulsIII.exe]
+  platforms: [Steam]
+  antiCheat: EasyAntiCheat
+  recommendedTier: Mid
+
+- id: armoredcore6
+  name: 装甲核心 6
+  executables: [armoredcore6.exe]
+  platforms: [Steam]
+  antiCheat: EasyAntiCheat
+  recommendedTier: High
+
+- id: honkai_star_rail
+  name: 崩坏：星穹铁道
+  executables: [StarRail.exe]
+  platforms: [Epic, Unknown]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: genshin
+  name: 原神
+  executables: [GenshinImpact.exe]
+  platforms: [Epic, Unknown]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: zzz
+  name: 绝区零
+  executables: [ZenlessZoneZero.exe]
+  platforms: [Epic, Unknown]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: blackmyth_wukong
+  name: 黑神话：悟空
+  executables: [b1-Win64-Shipping.exe]
+  platforms: [Steam, WeGame]
+  antiCheat: None
+  recommendedTier: High
+
+- id: fortnite
+  name: 堡垒之夜
+  executables: [FortniteClient-Win64-Shipping.exe]
+  platforms: [Epic]
+  antiCheat: EasyAntiCheat
+  recommendedTier: High
+
+- id: rocketleague
+  name: 火箭联盟
+  executables: [RocketLeague.exe]
+  platforms: [Epic]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: apex
+  name: Apex 英雄
+  executables: [r5apex.exe]
+  platforms: [Steam, Epic]
+  antiCheat: EasyAntiCheat
+  recommendedTier: High
+
+- id: destiny2
+  name: 命运 2
+  executables: [destiny2.exe]
+  platforms: [Steam, Epic]
+  antiCheat: BattlEye
+  recommendedTier: High
+
+- id: tarkov
+  name: 逃离塔科夫
+  executables: [EscapeFromTarkov.exe]
+  platforms: [Unknown]
+  antiCheat: BattlEye
+  recommendedTier: High
+
+- id: rust
+  name: 腐蚀
+  executables: [RustClient.exe]
+  platforms: [Steam]
+  antiCheat: EasyAntiCheat
+  recommendedTier: High
+
+- id: helldivers2
+  name: 地狱潜兵 2
+  executables: [helldivers2.exe]
+  platforms: [Steam]
+  antiCheat: None
+  recommendedTier: High
+
+- id: palworld
+  name: 幻兽帕鲁
+  executables: [Palworld-Win64-Shipping.exe]
+  platforms: [Steam, Xbox]
+  antiCheat: None
+  recommendedTier: High
+
+- id: lethalcompany
+  name: 致命公司
+  executables: ["Lethal Company.exe"]
+  platforms: [Steam]
+  antiCheat: None
+  recommendedTier: Low
+
+- id: phasmophobia
+  name: 恐鬼症
+  executables: [Phasmophobia.exe]
+  platforms: [Steam]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: stardewvalley
+  name: 星露谷物语
+  executables: ["Stardew Valley.exe"]
+  platforms: [Steam, Gog]
+  antiCheat: None
+  recommendedTier: Low
+
+- id: terraria
+  name: 泰拉瑞亚
+  executables: [Terraria.exe]
+  platforms: [Steam, Gog]
+  antiCheat: None
+  recommendedTier: Low
+
+- id: valheim
+  name: 英灵神殿
+  executables: [Valheim.exe]
+  platforms: [Steam]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: vampire_survivors
+  name: 吸血鬼幸存者
+  executables: [VampireSurvivors.exe]
+  platforms: [Steam]
+  antiCheat: None
+  recommendedTier: Low
+
+- id: subnautica
+  name: 深海迷航
+  executables: [Subnautica.exe]
+  platforms: [Steam, Epic]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: satisfactory
+  name: 幸福工厂
+  executables: [FactoryGameSteam-Win64-Shipping.exe]
+  platforms: [Steam]
+  antiCheat: None
+  recommendedTier: High
+
+- id: deep_rock_galactic
+  name: 深岩银河
+  executables: [FSD-Win64-Shipping.exe]
+  platforms: [Steam]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: hearthstone
+  name: 炉石传说
+  executables: [Hearthstone.exe]
+  platforms: [Unknown]
+  antiCheat: None
+  recommendedTier: Low
+
+- id: overwatch2
+  name: 守望先锋 2
+  executables: [Overwatch.exe]
+  platforms: [Unknown]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: diablo4
+  name: 暗黑破坏神 4
+  executables: ["Diablo IV.exe"]
+  platforms: [Unknown]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: d2r
+  name: 暗黑破坏神 2 重制版
+  executables: [D2R.exe]
+  platforms: [Unknown]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: wow
+  name: 魔兽世界
+  executables: [Wow.exe, WowClassic.exe]
+  platforms: [Unknown]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: wot
+  name: 坦克世界
+  executables: [worldoftanks.exe]
+  platforms: [Unknown]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: warframe
+  name: 星际战甲
+  executables: [Warframe.x64.exe]
+  platforms: [Steam]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: pathofexile
+  name: 流放之路
+  executables: [PathOfExile_x64.exe]
+  platforms: [Steam, Unknown]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: lostark
+  name: 命运方舟
+  executables: [LostArk.exe]
+  platforms: [Steam, Unknown]
+  antiCheat: EasyAntiCheat
+  recommendedTier: High
+
+- id: blackdesert
+  name: 黑色沙漠
+  executables: [BlackDesert64.exe]
+  platforms: [Unknown]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: bg3
+  name: 博德之门 3
+  executables: [bg3.exe]
+  platforms: [Steam, Gog]
+  antiCheat: None
+  recommendedTier: High
+
+- id: hogwarts_legacy
+  name: 霍格沃茨之遗
+  executables: [HogwartsLegacy.exe]
+  platforms: [Steam, Epic]
+  antiCheat: None
+  recommendedTier: High
+
+- id: re4
+  name: 生化危机 4 重制版
+  executables: [re4.exe]
+  platforms: [Steam]
+  antiCheat: None
+  recommendedTier: High
+
+- id: mhrise
+  name: 怪物猎人：崛起
+  executables: [MonsterHunterRise.exe]
+  platforms: [Steam]
+  antiCheat: None
+  recommendedTier: High
+
+- id: mhworld
+  name: 怪物猎人：世界
+  executables: [MonsterHunterWorld.exe]
+  platforms: [Steam]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: dragonsdogma2
+  name: 龙之信条 2
+  executables: [DragonsDogma2.exe]
+  platforms: [Steam]
+  antiCheat: None
+  recommendedTier: High
+
+- id: rainbow6
+  name: 彩虹六号：围攻
+  executables: [RainbowSix.exe]
+  platforms: [Unknown]
+  antiCheat: BattlEye
+  recommendedTier: High
+
+- id: thedivision2
+  name: 全境封锁 2
+  executables: [TheDivision2.exe]
+  platforms: [Unknown]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: forza_horizon5
+  name: 极限竞速：地平线 5
+  executables: [ForzaHorizon5.exe]
+  platforms: [Steam, Xbox]
+  antiCheat: None
+  recommendedTier: High
+
+- id: msfs
+  name: 微软模拟飞行
+  executables: [FlightSimulator.exe]
+  platforms: [Xbox, Steam]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: sea_of_thieves
+  name: 盗贼之海
+  executables: [SoTGame.exe]
+  platforms: [Steam, Xbox]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: halo_infinite
+  name: 光环：无限
+  executables: [HaloInfinite.exe]
+  platforms: [Steam, Xbox]
+  antiCheat: BattlEye
+  recommendedTier: Mid
+
+- id: naraka
+  name: 永劫无间
+  executables: [NarakaBladepoint.exe]
+  platforms: [Steam, WeGame]
+  antiCheat: BattlEye
+  recommendedTier: High
+
+- id: dnf
+  name: 地下城与勇士
+  executables: [DNF.exe]
+  platforms: [WeGame]
+  antiCheat: TencentAce
+  recommendedTier: Mid
+
+- id: streetfighter6
+  name: 街头霸王 6
+  executables: [StreetFighter6.exe]
+  platforms: [Steam]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: warhammer3
+  name: 全面战争：战锤 3
+  executables: [Warhammer3.exe]
+  platforms: [Steam, Gog]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: civilization6
+  name: 文明 6
+  executables: [CivilizationVI.exe]
+  platforms: [Steam]
+  antiCheat: None
+  recommendedTier: Mid
+
+- id: among_us
+  name: 我们之中
+  executables: ["Among Us.exe"]
+  platforms: [Steam]
+  antiCheat: None
+  recommendedTier: Low

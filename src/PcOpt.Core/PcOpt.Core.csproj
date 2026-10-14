@@ -16,6 +16,13 @@
     <PackageReference Include="NSec.Cryptography" Version="26.4.0" />
     <!-- YAML 规则包解析 -->
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
+    <!-- 硬件传感器（MPL-2.0；作 NuGet 依赖调用未修改源码，见 NOTICE 登记；T6 架构 3.3） -->
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+    <!-- ETW 内核进程事件追踪（MIT；T8 架构 3.4 GameWatcher；仅 Windows 可用） -->
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.2.8" />
+    <!-- WMI 查询（Win32_Processor / Win32_PhysicalMemory / MSStorageDriver / MSAcpi_ThermalZoneTemperature；仅 Windows）。
+         版本与 LibreHardwareMonitorLib 0.9.6 的传递依赖对齐（>= 10.0.2），避免 NU1605 降级 -->
+    <PackageReference Include="System.Management" Version="10.0.2" />
   </ItemGroup>
 
 </Project>

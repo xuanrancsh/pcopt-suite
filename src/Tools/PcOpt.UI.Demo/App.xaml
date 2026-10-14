@@ -1,0 +1,17 @@
+<!--
+  PcOpt.UI.Demo 应用入口。
+  默认挂载深色 Palette（组件库 Generic.xaml 亦内置深色兜底）；
+  ThemeService 启动后按"跟随系统"解析并整体替换，深浅色切换无闪烁。
+-->
+<Application x:Class="PcOpt.UI.Demo.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/PcOpt.UI;component/Themes/Palette.Dark.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

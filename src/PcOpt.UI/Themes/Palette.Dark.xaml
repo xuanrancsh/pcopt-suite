@@ -1,0 +1,76 @@
+<!--
+  PcOpt.UI 深色主题设计 Token（PRD 5.2）。
+  键名与 Palette.Light.xaml 严格一致；背景贴近 Mica 深色质感，图表双主题配色同步切换。
+-->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- ===== 颜色 Token ===== -->
+    <Color x:Key="PcOpt.Color.Primary.From">#3B82F6</Color>
+    <Color x:Key="PcOpt.Color.Primary.To">#2563EB</Color>
+    <Color x:Key="PcOpt.Color.Success">#22C55E</Color>
+    <Color x:Key="PcOpt.Color.Guard">#3B82F6</Color>
+    <Color x:Key="PcOpt.Color.Processing">#F59E0B</Color>
+    <Color x:Key="PcOpt.Color.Danger">#EF4444</Color>
+    <Color x:Key="PcOpt.Color.Neutral">#9CA3AF</Color>
+
+    <Color x:Key="PcOpt.Color.WindowBackground">#14171C</Color>
+    <Color x:Key="PcOpt.Color.CardBackground">#1E232B</Color>
+    <Color x:Key="PcOpt.Color.CardBackground.Hover">#262C35</Color>
+    <Color x:Key="PcOpt.Color.CardBorder">#333A45</Color>
+    <Color x:Key="PcOpt.Color.TextPrimary">#F3F4F6</Color>
+    <Color x:Key="PcOpt.Color.TextSecondary">#9CA3AF</Color>
+    <Color x:Key="PcOpt.Color.ChartGrid">#374151</Color>
+    <Color x:Key="PcOpt.Color.ChartAverage">#6B7280</Color>
+    <Color x:Key="PcOpt.Color.Overlay">#80000000</Color>
+
+    <!-- ===== 画笔 Token ===== -->
+    <LinearGradientBrush x:Key="PcOpt.Brush.Primary" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="{StaticResource PcOpt.Color.Primary.From}" />
+        <GradientStop Offset="1" Color="{StaticResource PcOpt.Color.Primary.To}" />
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="PcOpt.Brush.Primary.Solid" Color="{StaticResource PcOpt.Color.Primary.From}" />
+    <SolidColorBrush x:Key="PcOpt.Brush.Success" Color="{StaticResource PcOpt.Color.Success}" />
+    <SolidColorBrush x:Key="PcOpt.Brush.Guard" Color="{StaticResource PcOpt.Color.Guard}" />
+    <SolidColorBrush x:Key="PcOpt.Brush.Processing" Color="{StaticResource PcOpt.Color.Processing}" />
+    <SolidColorBrush x:Key="PcOpt.Brush.Danger" Color="{StaticResource PcOpt.Color.Danger}" />
+    <SolidColorBrush x:Key="PcOpt.Brush.Danger.Light" Color="#40EF4444" />
+    <SolidColorBrush x:Key="PcOpt.Brush.Neutral" Color="{StaticResource PcOpt.Color.Neutral}" />
+    <SolidColorBrush x:Key="PcOpt.Brush.WindowBackground" Color="{StaticResource PcOpt.Color.WindowBackground}" />
+    <SolidColorBrush x:Key="PcOpt.Brush.CardBackground" Color="{StaticResource PcOpt.Color.CardBackground}" />
+    <SolidColorBrush x:Key="PcOpt.Brush.CardBackground.Hover" Color="{StaticResource PcOpt.Color.CardBackground.Hover}" />
+    <SolidColorBrush x:Key="PcOpt.Brush.CardBorder" Color="{StaticResource PcOpt.Color.CardBorder}" />
+    <SolidColorBrush x:Key="PcOpt.Brush.TextPrimary" Color="{StaticResource PcOpt.Color.TextPrimary}" />
+    <SolidColorBrush x:Key="PcOpt.Brush.TextSecondary" Color="{StaticResource PcOpt.Color.TextSecondary}" />
+    <SolidColorBrush x:Key="PcOpt.Brush.ChartGrid" Color="{StaticResource PcOpt.Color.ChartGrid}" />
+    <SolidColorBrush x:Key="PcOpt.Brush.ChartAverage" Color="{StaticResource PcOpt.Color.ChartAverage}" />
+    <SolidColorBrush x:Key="PcOpt.Brush.Overlay" Color="{StaticResource PcOpt.Color.Overlay}" />
+    <SolidColorBrush x:Key="PcOpt.Brush.OnPrimary" Color="#FFFFFF" />
+
+    <!-- ===== 圆角 Token ===== -->
+    <CornerRadius x:Key="PcOpt.Radius.Card">8</CornerRadius>
+    <CornerRadius x:Key="PcOpt.Radius.Button">6</CornerRadius>
+    <CornerRadius x:Key="PcOpt.Radius.Dialog">12</CornerRadius>
+
+    <!-- ===== 间距 Token ===== -->
+    <Thickness x:Key="PcOpt.Space.1">4</Thickness>
+    <Thickness x:Key="PcOpt.Space.2">8</Thickness>
+    <Thickness x:Key="PcOpt.Space.3">12</Thickness>
+    <Thickness x:Key="PcOpt.Space.4">16</Thickness>
+    <Thickness x:Key="PcOpt.Space.6">24</Thickness>
+
+    <!-- ===== 字号 Token ===== -->
+    <sys:Double x:Key="PcOpt.Font.Size.Caption">12</sys:Double>
+    <sys:Double x:Key="PcOpt.Font.Size.Body">14</sys:Double>
+    <sys:Double x:Key="PcOpt.Font.Size.Title">16</sys:Double>
+    <sys:Double x:Key="PcOpt.Font.Size.Headline">20</sys:Double>
+    <sys:Double x:Key="PcOpt.Font.Size.Hero">28</sys:Double>
+
+    <FontFamily x:Key="PcOpt.Font.Family">Microsoft YaHei UI, Segoe UI Variable, Microsoft YaHei, Segoe UI</FontFamily>
+
+    <!-- 深色下投影更重一档，保持卡片层次（仍属轻投影） -->
+    <DropShadowEffect x:Key="PcOpt.Shadow.Card" Color="Black" Opacity="0.32" BlurRadius="8" ShadowDepth="2" Direction="270" />
+
+</ResourceDictionary>

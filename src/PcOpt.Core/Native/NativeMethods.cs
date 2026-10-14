@@ -138,4 +138,28 @@ internal static class NativeMethods
 
     /// <summary>将 Win32 错误码格式化为可读消息（不含任何路径信息）。</summary>
     internal static string FormatWin32Error(int errorCode) => new Win32Exception(errorCode).Message;
+
+    // ---------- kernel32：逻辑处理器拓扑（大小核，架构 3.3） ----------
+
+    /// <summary>LOGICAL_PROCESSOR_RELATIONSHIP：RelationProcessorCore。</summary>
+    internal const int RelationProcessorCore = 0;
+
+    /// <summary>PROCESSOR_RELATION 结构中 EfficiencyClass 字段相对结构起始的偏移。</summary>
+    internal const int ProcessorRelationEfficiencyClassOffset = 0;
+
+    /// <summary>PROCESSOR_RELATION 结构中 GroupCount 字段相对 ProcessorRelation 起始的偏移。</summary>
+    internal const int ProcessorRelationGroupCountOffset = 20;
+
+    /// <summary>GroupMask 数组相对 ProcessorRelation 起始的偏移（GROUP_AFFINITY 按 8 字节对齐）。</summary>
+    internal const int ProcessorRelationGroupMaskOffset = 32;
+
+    /// <summary>GROUP_AFFINITY 结构大小（KAFFINITY 8 字节 + GROUP 2 字节 + 对齐填充）。</summary>
+    internal const int GroupAffinitySize = 16;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool GetLogicalProcessorInformationEx(
+        int relationshipType,
+        IntPtr buffer,
+        ref uint returnedLength);
 }

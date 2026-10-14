@@ -15,9 +15,13 @@ pcopt-suite 采用 MIT 许可证发布（见根目录 `LICENSE`）。
 | YamlDotNet | Antoine Aubry | https://github.com/aaubry/YamlDotNet | MIT | YAML 规则包解析 |
 | NSec.Cryptography | ektrah | https://github.com/ektrah/nsec | BSD-3-Clause | Ed25519 规则包签名验证（libsodium 实现） |
 | Microsoft.Win32.Registry | Microsoft | https://github.com/dotnet/runtime | MIT | 注册表访问（.NET 平台组件） |
+| LibreHardwareMonitorLib | LibreHardwareMonitor contributors | https://github.com/LibreHardwareMonitor/LibreHardwareMonitor | MPL-2.0 | 硬件传感器读数（T6；作依赖调用未修改源码，分发须附其 LICENSE） |
+| Microsoft.Diagnostics.Tracing.TraceEvent | Microsoft | https://github.com/microsoft/perfview | MIT | ETW 内核进程事件订阅（T8 GameWatcher；仅 Windows） |
 
 > NSec.Cryptography 为 BSD-3-Clause 许可证，仅作为 NuGet 依赖调用、未修改其源码；
 > 依据 BSD-3 条款保留其版权声明（见上文链接仓库 LICENSE）。
+> LibreHardwareMonitorLib 为 MPL-2.0：仅以 NuGet 依赖方式调用、未修改其源码；
+> MPL-2.0 对"更大作品"按原许可证发布无碍，分发时须随附其版权与许可证声明（见仓库 LICENSE）。
 
 ## 开发 / 测试依赖（不随产品分发）
 
@@ -32,7 +36,6 @@ pcopt-suite 采用 MIT 许可证发布（见根目录 `LICENSE`）。
 
 | 项目 | 许可证 | 用途 | 计划任务 |
 |---|---|---|---|
-| LibreHardwareMonitorLib | MPL-2.0 | 硬件传感器（作依赖调用；集成前核验） | T6 |
 | PresentMon (Intel) | MIT | 帧时间捕获（子进程附带二进制） | T32 |
 
 ## 功能参考项目（致谢）
