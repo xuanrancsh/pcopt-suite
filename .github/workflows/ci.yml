@@ -43,11 +43,18 @@ jobs:
       - name: 构建（Release，警告即错误）
         run: dotnet build pcopt-suite.sln -c Release --no-restore -p:TreatWarningsAsErrors=true
 
-      # 说明：显式不指定 LogFileName —— 解决方案级测试会并行跑 4 个测试程序集，
+      # 说明 1：显式不指定 LogFileName —— 解决方案级测试会并行跑 4 个测试程序集，
       # 固定文件名会互相覆盖；交给 VSTest 默认命名（每个程序集一个 TRX）即可。
-      - name: 全量测试（Release）
+      # 说明 2：排除 Category=RequiresRealHardware —— 该类用例读取【真实硬件】
+      # （真实显示适配器等）。无头 CI 虚拟机（GitHub windows-latest）没有显示适配器，
+      # 这些用例必然失败，因此 CI 排除；它们只在本机（真机）运行。
+      # 本地全量（含真机类）请用不带 --filter 的命令：
+      #   dotnet test pcopt-suite.sln -c Release
+      # （见 CONTRIBUTING.md「构建与测试」）。
+      - name: 全量测试（Release，排除真机类用例）
         run: >
           dotnet test pcopt-suite.sln -c Release --no-build
+          --filter "Category!=RequiresRealHardware"
           --logger "trx"
           --results-directory artifacts/test-results
 

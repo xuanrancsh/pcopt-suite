@@ -56,8 +56,11 @@ dotnet build pcopt-suite.sln -c Release
 # 构建（要求 0 警告 0 错误；Directory.Build.props 已开启 TreatWarningsAsErrors）
 dotnet build pcopt-suite.sln -c Release
 
-# 全量测试（内核 + 三产品）
+# 全量测试（内核 + 三产品；包含 RequiresRealHardware 真机类用例）
 dotnet test pcopt-suite.sln -c Release
+
+# 仅模拟 CI 的过滤执行（排除真机类用例）
+dotnet test pcopt-suite.sln -c Release --filter "Category!=RequiresRealHardware"
 
 # 运行某个产品
 dotnet run --project src/Products/GameOptBox -c Release
@@ -72,6 +75,14 @@ pwsh -File scripts/check-no-secrets.ps1
 
 **提 PR 前请确保**：`dotnet build` 0 警告、`dotnet test` 全绿、上述两条合规自检通过。
 CI（`.github/workflows/ci.yml`）会在 `windows-latest` 上重跑同样的门禁。
+
+> **关于 `RequiresRealHardware`（真机类用例）**
+> 少数用例读取**真实硬件**（如真实显示适配器、真实传感器路径），**必须在有真实硬件的桌面机器上运行**，
+> 已用 xUnit trait `[Trait("Category", "RequiresRealHardware")]` 标记。无头 CI 虚拟机
+> （GitHub `windows-latest` 没有显示适配器）无法满足其前置条件，因此 **CI 会显式排除该类**：
+> `dotnet test pcopt-suite.sln -c Release --filter "Category!=RequiresRealHardware"`。
+> 这类用例**不会被删除、也不会弱化断言**：它们在本地 `dotnet test`（不带 `--filter`）时照常执行，
+> 请在有真实硬件的机器上运行全量测试以覆盖它们。若你新增了依赖真机的用例，请同样打上该 trait 并说明原因。
 
 ---
 

@@ -47,8 +47,11 @@ jobs:
       - name: 构建（Release，警告即错误）
         run: dotnet build pcopt-suite.sln -c Release --no-restore -p:TreatWarningsAsErrors=true
 
-      - name: 全量测试（Release）
-        run: dotnet test pcopt-suite.sln -c Release --no-build
+      # 排除 Category=RequiresRealHardware：该类用例读取【真实硬件】，无头 CI 虚拟机
+      # （windows-latest）没有显示适配器，必然失败；它们只在本机（真机）运行。
+      # 本地全量请用不带 --filter 的 `dotnet test pcopt-suite.sln -c Release`。
+      - name: 全量测试（Release，排除真机类用例）
+        run: dotnet test pcopt-suite.sln -c Release --no-build --filter "Category!=RequiresRealHardware"
 
       - name: 官方规则包签名校验
         run: dotnet run --project src/Tools/PcOpt.RuleSigner -c Release -- rules/tweaks --verify

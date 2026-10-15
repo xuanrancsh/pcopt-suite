@@ -125,8 +125,12 @@ dotnet run --project src/Products/FrameLab -c Release
 ### 测试
 
 ```bash
-dotnet test pcopt-suite.sln -c Release          # 全量：内核 + 三产品
+dotnet test pcopt-suite.sln -c Release          # 全量：内核 + 三产品（含真机类用例）
 ```
+
+> 少数用例标记为 `RequiresRealHardware`（读取真实显示适配器 / 真实传感器路径），**只应在有真实硬件的桌面机器上运行**。
+> 无头 CI 虚拟机没有显示适配器，因此 CI 会显式排除该类：`--filter "Category!=RequiresRealHardware"`。
+> 该类用例不会被删除或弱化断言，请在有真实硬件的机器上跑全量测试覆盖它们。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ### 产品 C：获取 PresentMon（可选，联网）
 

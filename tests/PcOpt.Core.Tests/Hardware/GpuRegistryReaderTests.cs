@@ -9,6 +9,13 @@ namespace PcOpt.Core.Tests.Hardware;
 /// <see cref="GpuRegistryReader"/> 测试（T6）：
 /// 厂商推断纯函数 + 合规红线 #1 审计（读取路径必须落在写保护区内——只读的证明）。
 /// </summary>
+/// <remarks>
+/// 标记为 <c>RequiresRealHardware</c> 的用例读取<strong>真实显示适配器</strong>，
+/// 必须在有真实硬件的桌面机器上运行；无头 CI 虚拟机（GitHub <c>windows-latest</c> 等）
+/// 的显示适配器类键为空，这些用例必然失败，因此在 CI 中以
+/// <c>--filter "Category!=RequiresRealHardware"</c> 排除，但仍会在本地全量运行中被执行
+/// （不删除、不弱化断言）。
+/// </remarks>
 public sealed class GpuRegistryReaderTests
 {
     [Theory]
@@ -53,8 +60,11 @@ public sealed class GpuRegistryReaderTests
     }
 
     [Fact]
+    [Trait("Category", "RequiresRealHardware")]
     public void ReadDisplayAdapters_OnRealMachine_ShouldNotThrow_AndReturnPlausibleList()
     {
+        // 需真机：断言依赖"本机至少一块显示适配器"（adapters 非空）；
+        // 无头 CI 虚拟机没有显示适配器，无法满足该前置条件，故归入 RequiresRealHardware。
         var reader = new GpuRegistryReader();
 
         var act = () => reader.ReadDisplayAdapters();

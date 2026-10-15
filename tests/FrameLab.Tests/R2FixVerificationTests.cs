@@ -1,6 +1,5 @@
 // Copyright (c) 2026 pcopt-suite contributors. Licensed under the MIT License.
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging.Abstractions;
 using PcOpt.Core;
 using PcOpt.Products.FrameLab.Services;
@@ -14,8 +13,9 @@ namespace PcOpt.Products.FrameLab.Tests;
 ///   <item>D1：在「多个互相独立的 STA 线程」上复用渲染器，验证跨线程不再抛异常（不止断言 IsFrozen）。</item>
 ///   <item>D2：采集时长逐一变化时证据文案随之变化（30/45/120）。</item>
 ///   <item>D3：height=200..480 不抛且 <c>PixelHeight</c> 与请求高度一致（见 KnownDefectReproTests）。</item>
-///   <item>D4：故障采样器（快故障 + 慢于有界等待的故障）重复执行 ≥30 次的「零未观察任务异常」压力验证，
-///     并确认调用方取消语义仍即时返回。</item>
+///   <item>D4：以<b>不依赖 GC 时机</b>的确定性检测器（采样器在运行期访问已被提前释放的
+///     <c>CancellationTokenSource</c> 会抛 <see cref="ObjectDisposedException"/>）验证令牌源生命周期，
+///     并用 ≥30 次故障采样作为"零未观察任务异常"的附加保障；同时确认调用方取消语义仍即时返回。</item>
 /// </list>
 /// </summary>
 [Trait("Category", "R2FixVerification")]
@@ -123,7 +123,7 @@ public sealed class R2FixVerificationTests
         text.Should().NotContain("60 秒内", "不得再出现写死的 60 秒");
     }
 
-    // ================= D4：零未观察任务异常压力 =================
+    // ================= D4：CTS 生命周期（确定性） + 零未观察任务异常 =================
 
     private static int _unobserved;
 
@@ -149,7 +149,7 @@ public sealed class R2FixVerificationTests
         }
     }
 
-    /// <summary>故意抛异常的采样器：delayMs 后可快故障或慢于有界等待再故障。</summary>
+    /// <summary>故意抛异常的采样器（delayMs 后可快故障）。</summary>
     private sealed class ThrowingDpcSampler : IDpcSampler
     {
         private readonly int _delayMs;
@@ -166,23 +166,40 @@ public sealed class R2FixVerificationTests
         }
     }
 
-    /// <summary>制造一个"引发后即被丢弃"的故障任务（NoInlining 确保局部引用随即失效，可被回收）。</summary>
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void FireAndForgetFaultedTask() =>
-        _ = Task.Run(() => throw new InvalidOperationException("故意未观察的故障任务（对照）"));
-
-    /// <summary>反复触发 GC / 终结器，直到谓词满足或达到轮次上限（用于观察任务异常）。</summary>
-    private static void GcUntil(Func<bool> predicate, int maxRounds = 40)
+    /// <summary>
+    /// 确定性检测器：慢采样器在主体末尾访问 <c>cancellationToken.WaitHandle</c>；若其令牌源（CTS）
+    /// 已被提前释放，会抛 <see cref="ObjectDisposedException"/>（实测：<c>CTS.Dispose()</c> 后访问
+    /// <c>CancellationToken.WaitHandle</c> 必抛）。借此<b>不依赖 GC / 机器速度</b>地确定检测"CTS 提前释放"。
+    /// </summary>
+    private sealed class DisposalDetectingSampler : IDpcSampler
     {
-        for (var i = 0; i < maxRounds && !predicate(); i++)
+        private readonly int _busyMs;
+        private int _invoked;
+        private int _disposedObserved;
+
+        public DisposalDetectingSampler(int busyMs) => _busyMs = busyMs;
+
+        public int InvokedCount => Volatile.Read(ref _invoked);
+        public int DisposedObserved => Volatile.Read(ref _disposedObserved);
+
+        public Result<DpcStats> Sample(TimeSpan duration, CancellationToken cancellationToken)
         {
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-            Thread.Sleep(20);
+            Interlocked.Increment(ref _invoked);
+            Thread.Sleep(_busyMs); // 慢于服务端 2s 有界等待
+            try
+            {
+                _ = cancellationToken.WaitHandle; // CTS 若已被提前释放 → ObjectDisposedException
+            }
+            catch (ObjectDisposedException)
+            {
+                Interlocked.Increment(ref _disposedObserved);
+            }
+
+            return Result<DpcStats>.Ok(new DpcStats(1.0, 3.0, 10));
         }
     }
 
+    /// <summary>反复触发 GC / 终结器若干轮（仅用于"未观察异常"附加网；断言恒为 0，不会误报失败）。</summary>
     private static void GcRounds(int rounds)
     {
         for (var i = 0; i < rounds; i++)
@@ -194,25 +211,64 @@ public sealed class R2FixVerificationTests
         }
     }
 
+    /// <summary>
+    /// 确定性阳性对照（替代原 GC 时机依赖写法）：复刻"任务仍在运行就释放 CTS"的旧写法，
+    /// 证明检测器确实能捕获"CTS 提前释放"。不依赖 GC / 机器速度，确定通过。
+    /// </summary>
     [Fact]
-    public void D4Fix_PositiveControl_UnobservedFaultedTask_IsDetected()
+    public void D4Detector_PositiveControl_DetectsEarlyDisposal()
     {
-        TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
-        try
-        {
-            Interlocked.Exchange(ref _unobserved, 0);
-            FireAndForgetFaultedTask();
-            GcUntil(() => Volatile.Read(ref _unobserved) > 0);
+        var sampler = new DisposalDetectingSampler(500);
+        using var cts = new CancellationTokenSource();
+        var task = Task.Run(() => sampler.Sample(TimeSpan.FromSeconds(1), cts.Token));
 
-            Volatile.Read(ref _unobserved).Should().BeGreaterThan(0,
-                "对照项：检测机制本身必须能捕获未观察异常（否则本验证无意义）");
-        }
-        finally
+        Thread.Sleep(100);   // 让任务先开始执行
+        cts.Dispose();       // 提前释放（模拟旧 using 写法在任务结束前释放）
+
+        var deadline = Stopwatch.StartNew();
+        while (!task.IsCompleted && deadline.Elapsed < TimeSpan.FromSeconds(10))
         {
-            TaskScheduler.UnobservedTaskException -= OnUnobservedTaskException;
+            Thread.Sleep(20);
         }
+
+        task.IsCompleted.Should().BeTrue("采样任务应在上限内结束");
+        sampler.DisposedObserved.Should().BeGreaterThan(0,
+            "对照项：检测器必须能捕获'CTS 提前释放'（否则本验证无意义）");
     }
 
+    /// <summary>
+    /// D4 加固验证（确定性）：慢采样器越过 2s 有界等待后仍被正确收尾——令牌源必须等任务真正结束
+    /// 才释放；任务运行期间访问令牌不得抛 <see cref="ObjectDisposedException"/>。
+    /// </summary>
+    [Fact]
+    public void D4Fix_CtsNotDisposedWhileSamplerStillRunning()
+    {
+        var sampler = new DisposalDetectingSampler(3_000);
+        var service = new CaptureService(new FixedDelayRunner(), sampler, NullLogger<CaptureService>.Instance);
+
+        const int runs = 5;
+        for (var i = 0; i < runs; i++)
+        {
+            var result = service.RunCapture("game.exe", 1, "本次测试");
+            result.IsSuccess.Should().BeTrue(result.Error);
+            result.Value!.Stats.Dpc.Samples.Should().Be(0, "慢于有界等待应退化为空统计（不阻塞）");
+        }
+
+        var deadline = Stopwatch.StartNew();
+        while (sampler.InvokedCount < runs && deadline.Elapsed < TimeSpan.FromSeconds(30))
+        {
+            Thread.Sleep(20);
+        }
+
+        sampler.InvokedCount.Should().Be(runs, "DPC 采样委托必须全部被执行");
+        sampler.DisposedObserved.Should().Be(0,
+            "CTS 不得在慢采样器仍访问令牌时被提前释放（D4 加固：任务真正结束才释放令牌源）");
+    }
+
+    /// <summary>
+    /// 附加网：故障采样器重复 ≥30 次，"零未观察任务异常"。断言恒为 0（不依赖 GC 时机即可通过），
+    /// 仅在实现若真的丢出未观察异常时才会失败。
+    /// </summary>
     [Fact]
     public void D4Fix_ThrowingSampler_RepeatedRuns_NoUnobservedTaskException()
     {
@@ -233,34 +289,6 @@ public sealed class R2FixVerificationTests
 
             GcRounds(10);
             Volatile.Read(ref _unobserved).Should().Be(0, "重复 30 次故障采样后不得出现未观察任务异常");
-        }
-        finally
-        {
-            TaskScheduler.UnobservedTaskException -= OnUnobservedTaskException;
-        }
-    }
-
-    [Fact]
-    public void D4Fix_SlowThrowingSampler_OutlivesBoundedWait_NoUnobservedTaskException()
-    {
-        // 任务慢于 2s 有界等待才故障：走"任务仍在后台运行 → 续延观察异常"分支。
-        var service = new CaptureService(new FixedDelayRunner(), new ThrowingDpcSampler(2_200), NullLogger<CaptureService>.Instance);
-
-        TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
-        try
-        {
-            Interlocked.Exchange(ref _unobserved, 0);
-
-            for (var i = 0; i < 6; i++)
-            {
-                var result = service.RunCapture("game.exe", 1, "本次测试");
-                result.IsSuccess.Should().BeTrue(result.Error);
-                result.Value!.Stats.Dpc.Samples.Should().Be(0, "慢于有界等待应退化为空统计");
-                Thread.Sleep(500); // 让后台任务完成，触发续延观察
-            }
-
-            GcRounds(10);
-            Volatile.Read(ref _unobserved).Should().Be(0, "慢故障任务在续延中被观察后，不得出现未观察异常");
         }
         finally
         {

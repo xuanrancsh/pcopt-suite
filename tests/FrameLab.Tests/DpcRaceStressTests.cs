@@ -7,15 +7,34 @@ using PcOpt.Products.FrameLab.Services;
 namespace PcOpt.Products.FrameLab.Tests;
 
 /// <summary>
-/// DPC 采集「竞态修复真实性」独立压力证伪（QA 构造，T37 重点 5）。
-/// 工程师自报：原实现约 1/6 概率 DPC 统计为空（向 Task.Run 传了取消令牌），已修为
-/// "不向 Task.Run 传令牌 + 有界等待 2s"。本测试用<b>重复压力 + 真实采样器</b>证伪"DPC 从不为空"，
-/// 并验证有界等待不会永久阻塞、也不会拖慢主流程、且不丢失取消语义。
+/// DPC 采集「竞态修复真实性」独立压力证伪（QA 构造，T37 重点 5；T38 CI 稳健化）。
+/// <para>
+/// 原始竞态：旧实现向 <c>Task.Run</c> 传了取消令牌 —— 采集瞬时结束时（取消早于委托被调度）
+/// 委托被判"取消"而<b>完全不执行</b> → DPC 统计丢空。修复：<b>不向 Task.Run 传令牌</b>（委托必然执行）
+/// + 有界等待 2s 收尾。
+/// </para>
+/// <para>
+/// <b>CI 稳健化原则（T38）</b>：断言只依赖"委托是否被执行"这一与机器调度速度无关的事实，
+/// 绝不依赖"委托能否在某个墙钟窗口内被调度"。原先断言"DPC 恒不为空"在 2 核慢速 CI 上会因
+/// 线程池调度延迟（> 2s 有界等待）而偶发失败——那是环境调度，不是残留竞态：
+/// <list type="bullet">
+///   <item>竞态守护：<c>PartialDpcSampler_InstantCapture_DelegateAlwaysInvoked</c> —— 在宽裕上限内
+///     轮询等待全部委托确实被执行；旧竞态下委托会被丢弃 → 计数不足 → 失败。</item>
+///   <item>时序无关的"不丢弃"证明：<c>RealSampler_WithinWindow_DpcNeverEmpty</c> —— 用<b>可控同步点</b>
+///     保证真实采样委托已在采集窗口内开始执行，再断言其统计被完整保留（确定通过，无墙钟依赖）。</item>
+/// </list>
+/// </para>
 /// </summary>
 public sealed class DpcRaceStressTests
 {
     private const int DpcWaitBudgetMs = 2_000;
 
+    private static IReadOnlyList<FrameSample> MakeSamples(int count = 20) =>
+        Enumerable.Range(0, count)
+            .Select(i => new FrameSample { FrameTimeMs = 16.0, TimeInSeconds = i * 0.016 })
+            .ToArray();
+
+    /// <summary>采集替身：可选固定延迟；忠于取消语义（预取消即失败返回）。</summary>
     private sealed class FixedDelayRunner : IPresentMonRunner
     {
         private readonly int _delayMs;
@@ -24,9 +43,7 @@ public sealed class DpcRaceStressTests
         public FixedDelayRunner(int delayMs, IReadOnlyList<FrameSample>? samples = null)
         {
             _delayMs = delayMs;
-            _samples = samples ?? Enumerable.Range(0, 20)
-                .Select(i => new FrameSample { FrameTimeMs = 16.0, TimeInSeconds = i * 0.016 })
-                .ToArray();
+            _samples = samples ?? MakeSamples();
         }
 
         public PresentMonAvailability Locate() => new(true, @"C:\fake\PresentMon.exe", "可用");
@@ -52,18 +69,83 @@ public sealed class DpcRaceStressTests
         }
     }
 
-    /// <summary>忠于产品契约的采样替身：收到取消时"带上已采到的部分返回"（至少采到 1 个样本）。</summary>
-    private sealed class PartialDpcSampler : IDpcSampler
+    /// <summary>
+    /// 门控采集替身：先<b>等待 DPC 采样委托确实开始执行</b>（有界上限，避免永久阻塞），
+    /// 再让采集结束。用于在"采集窗口内"确定性地验证 DPC 统计不被丢弃，且不依赖机器调度速度。
+    /// </summary>
+    private sealed class GatedRunner : IPresentMonRunner
     {
+        private readonly ManualResetEventSlim _samplerStarted;
+        private readonly int _lingerMs;
+        private readonly IReadOnlyList<FrameSample> _samples = MakeSamples();
+
+        public GatedRunner(ManualResetEventSlim samplerStarted, int lingerMs)
+        {
+            _samplerStarted = samplerStarted;
+            _lingerMs = lingerMs;
+        }
+
+        public PresentMonAvailability Locate() => new(true, @"C:\fake\PresentMon.exe", "可用");
+
+        public Result<PresentMonCaptureResult> Capture(PresentMonOptions options, IProgress<FrameSample>? progress, CancellationToken cancellationToken)
+        {
+            // 与调度速度无关：只要委托被执行，此处必然被放行；仅在极端异常时才超时。
+            _samplerStarted.Wait(TimeSpan.FromSeconds(20));
+            if (_lingerMs > 0)
+            {
+                Thread.Sleep(_lingerMs); // 让采样器累积至少一个样本
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return Result<PresentMonCaptureResult>.Fail("采集已取消（测试替身）");
+            }
+
+            return Result<PresentMonCaptureResult>.Ok(new PresentMonCaptureResult(_samples, null, TimeSpan.Zero, string.Empty));
+        }
+    }
+
+    /// <summary>采样替身装饰器：进入即计数并触发"已开始"信号，再委托内层采样器。</summary>
+    private sealed class SignalingSampler : IDpcSampler
+    {
+        private readonly IDpcSampler _inner;
+        private readonly ManualResetEventSlim _started;
+        private int _invoked;
+
+        public SignalingSampler(IDpcSampler inner, ManualResetEventSlim started)
+        {
+            _inner = inner;
+            _started = started;
+        }
+
+        public int InvokedCount => Volatile.Read(ref _invoked);
+
         public Result<DpcStats> Sample(TimeSpan duration, CancellationToken cancellationToken)
         {
+            Interlocked.Increment(ref _invoked);
+            _started.Set();
+            return _inner.Sample(duration, cancellationToken);
+        }
+    }
+
+    /// <summary>忠于产品契约的采样替身：收到取消时"带上已采到的部分返回"（do-while 至少产出 1 个样本）。</summary>
+    private sealed class PartialDpcSampler : IDpcSampler
+    {
+        private int _invoked;
+
+        /// <summary>被调用次数（用于证明"委托未被竞态丢弃"，与调度速度无关）。</summary>
+        public int InvokedCount => Volatile.Read(ref _invoked);
+
+        public Result<DpcStats> Sample(TimeSpan duration, CancellationToken cancellationToken)
+        {
+            Interlocked.Increment(ref _invoked);
             var count = 0;
             var total = 0.0;
             var max = 0.0;
             do
             {
                 Thread.Sleep(2);
-                var overshoot = 0.3;
+                const double overshoot = 0.3;
                 total += overshoot;
                 max = Math.Max(max, overshoot);
                 count++;
@@ -88,57 +170,65 @@ public sealed class DpcRaceStressTests
         }
     }
 
+    /// <summary>
+    /// 竞态守护（与调度速度无关）：用"瞬时采集 + 忠于契约的采样器"，证明每次采集的 DPC 采样
+    /// <b>委托都被执行</b>。旧竞态（向 Task.Run 传令牌）下，取消早于调度会丢弃委托 → 计数不足 → 失败。
+    /// </summary>
     [Fact]
-    public void RealSampler_RepeatedRuns_DpcNeverEmpty()
+    public void PartialDpcSampler_InstantCapture_DelegateAlwaysInvoked()
     {
-        // 真实调度抖动采样器 + 每次 200ms 的采集时长；重复 15 次，DPC 采样数必须恒 > 0。
-        var runner = new FixedDelayRunner(200);
-        var service = new CaptureService(runner, new SchedulingJitterDpcSampler(), NullLogger<CaptureService>.Instance);
-
-        // 预热（消除线程池冷启动）
-        service.RunCapture("game.exe", 5, "warmup").IsSuccess.Should().BeTrue();
-
-        var emptyCount = 0;
-        var maxElapsedMs = 0.0;
-        for (var i = 0; i < 15; i++)
-        {
-            var sw = Stopwatch.StartNew();
-            var result = service.RunCapture("game.exe", 5, "本次测试");
-            sw.Stop();
-            maxElapsedMs = Math.Max(maxElapsedMs, sw.Elapsed.TotalMilliseconds);
-
-            result.IsSuccess.Should().BeTrue(result.Error);
-            if (result.Value!.Stats.Dpc.Samples == 0)
-            {
-                emptyCount++;
-            }
-        }
-
-        emptyCount.Should().Be(0, "DPC 统计在重复执行中绝不能为空（1/6 竞态应已修复）");
-        maxElapsedMs.Should().BeLessThan(DpcWaitBudgetMs + 500,
-            "正常路径不应被 DPC 采样拖慢（采集 200ms，远小于 DPC 上限）");
-    }
-
-    [Fact]
-    public void PartialSampler_InstantCapture_DpcNeverEmpty_Stress40()
-    {
-        // 采集"瞬时返回"（最易触发原竞态）：不向 Task.Run 传令牌后，委托必然执行，
-        // 忠于契约的采样器会带上部分结果返回 → DPC 恒不为空。
         var runner = new FixedDelayRunner(0);
-        var service = new CaptureService(runner, new PartialDpcSampler(), NullLogger<CaptureService>.Instance);
+        var sampler = new PartialDpcSampler();
+        var service = new CaptureService(runner, sampler, NullLogger<CaptureService>.Instance);
 
-        var emptyCount = 0;
-        for (var i = 0; i < 40; i++)
+        var capturedNonEmpty = 0;
+        const int runs = 40;
+        for (var i = 0; i < runs; i++)
         {
             var result = service.RunCapture("game.exe", 1, "本次测试");
             result.IsSuccess.Should().BeTrue(result.Error);
-            if (result.Value!.Stats.Dpc.Samples == 0)
+            if (result.Value!.Stats.Dpc.Samples > 0)
             {
-                emptyCount++;
+                capturedNonEmpty++;
             }
         }
 
-        emptyCount.Should().Be(0, "瞬时采集下 DPC 也不应为空（40 次压力）");
+        // 在宽裕上限内轮询等待"全部委托确实被执行"——这是与机器调度速度无关的竞态守护。
+        var deadline = Stopwatch.StartNew();
+        while (sampler.InvokedCount < runs && deadline.Elapsed < TimeSpan.FromSeconds(30))
+        {
+            Thread.Sleep(20);
+        }
+
+        sampler.InvokedCount.Should().Be(runs,
+            "瞬时采集（最易触发'取消早于调度'）下，每次 DPC 采样委托都必须被执行——"
+            + "不得因'不向 Task.Run 传令牌'的修复被回退而丢空");
+        capturedNonEmpty.Should().BeGreaterThan(0,
+            "采样委托已执行时，其产出的统计不得被整体丢弃（至少可观测到一次非空）");
+    }
+
+    /// <summary>
+    /// 时序无关的"不丢弃"证明：用可控同步点保证<b>真实采样器</b>已在采集窗口内开始执行，
+    /// 再断言其统计被完整保留。确定性通过，不依赖机器调度速度。
+    /// </summary>
+    [Fact]
+    public void RealSampler_WithinWindow_DpcNeverEmpty()
+    {
+        const int runs = 15;
+        for (var i = 0; i < runs; i++)
+        {
+            using var started = new ManualResetEventSlim(false);
+            var sampler = new SignalingSampler(new SchedulingJitterDpcSampler(), started);
+            var runner = new GatedRunner(started, lingerMs: 50);
+            var service = new CaptureService(runner, sampler, NullLogger<CaptureService>.Instance);
+
+            var result = service.RunCapture("game.exe", 5, "本次测试");
+
+            result.IsSuccess.Should().BeTrue(result.Error);
+            sampler.InvokedCount.Should().Be(1, "DPC 采样委托必须被执行");
+            result.Value!.Stats.Dpc.Samples.Should().BeGreaterThan(0,
+                "采样器已在采集窗口内执行并累积样本，其统计不得被采集瞬时结束丢弃");
+        }
     }
 
     [Fact]

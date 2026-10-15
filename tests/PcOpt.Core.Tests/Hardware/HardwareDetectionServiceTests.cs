@@ -10,6 +10,12 @@ namespace PcOpt.Core.Tests.Hardware;
 /// <see cref="HardwareDetectionService"/> 测试（T6 架构 3.3）：
 /// 本机一致性 + 传感器缺失优雅降级（不依赖真实传感器全成功——待明确事项 #2）。
 /// </summary>
+/// <remarks>
+/// 标记为 <c>RequiresRealHardware</c> 的用例读取<strong>真实硬件</strong>（真实显示适配器等），
+/// 必须在有真实硬件的桌面机器上运行；无头 CI 虚拟机（GitHub <c>windows-latest</c> 等）没有显示适配器，
+/// 这些用例必然失败，因此在 CI 中以 <c>--filter "Category!=RequiresRealHardware"</c> 排除，
+/// 但仍会在本地全量运行中被执行（不删除、不弱化断言）。
+/// </remarks>
 public sealed class HardwareDetectionServiceTests
 {
     private static HardwareDetectionService CreateService(
@@ -18,8 +24,11 @@ public sealed class HardwareDetectionServiceTests
         new(NullLogger<HardwareDetectionService>.Instance, sensorReader, gpuReader);
 
     [Fact]
+    [Trait("Category", "RequiresRealHardware")]
     public async Task DetectAsync_OnRealMachine_ShouldProduceConsistentProfile()
     {
+        // 需真机：断言依赖"真实机器至少一块显示适配器"（profile.Gpus 非空）；
+        // 无头 CI 虚拟机没有显示适配器，无法满足该前置条件，故归入 RequiresRealHardware。
         var service = CreateService();
 
         var result = await service.DetectAsync();
