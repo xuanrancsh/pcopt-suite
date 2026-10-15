@@ -45,7 +45,10 @@ secrets.json
 .local/
 
 # ---------- 本地用户数据（还原日志 / 配置 / 日志） ----------
-**/journal/
+# 注意：运行时还原日志位于 %ProgramData%\pcopt\journal（仓库之外）。
+# 禁止使用 **/journal/ —— 在 Windows 大小写不敏感匹配下会误伤源码目录
+# src/PcOpt.Core/Journal/ 与 tests/PcOpt.Core.Tests/Journal/。仅在仓库根部忽略。
+/journal/
 pcopt-journal/
 *.log
 

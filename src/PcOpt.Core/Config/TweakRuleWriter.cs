@@ -28,6 +28,35 @@ public static class TweakRuleWriter
     }
 
     /// <summary>
+    /// 尽力序列化规则为 YAML：成功返回 <c>true</c> 并输出文本；遇到无法序列化的动作类型
+    /// （如测试替身动作）时返回 <c>false</c>（yaml 为 null），<b>不抛异常</b>。
+    /// 供还原日志快照等"可失败但不应中断主流程"的场景使用。
+    /// </summary>
+    public static bool TryWrite(TweakRule rule, out string? yaml)
+    {
+        yaml = null;
+        if (rule is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            yaml = Write(rule);
+            return true;
+        }
+        catch (Exception ex) when (ex is ArgumentOutOfRangeException
+            or InvalidCastException
+            or FormatException
+            or OverflowException
+            or YamlDotNet.Core.YamlException)
+        {
+            yaml = null;
+            return false;
+        }
+    }
+
+    /// <summary>
     /// 将规则写入文件（UTF-8 无 BOM；先写临时文件再整体替换，避免半截文件被误加载）。
     /// </summary>
     public static Result WriteToFile(TweakRule rule, string path)

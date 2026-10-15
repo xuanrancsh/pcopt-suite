@@ -14,10 +14,17 @@
     <PackageReference Include="WPF-UI" Version="4.0.2" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\PcOpt.UI\PcOpt.UI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 游戏数据库与规则公钥随包发布（架构 3.4 / 3.5） -->
+    <None Include="..\..\..\rules\games.yaml" Link="rules\games.yaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\..\rules\public.key" Link="rules\public.key" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

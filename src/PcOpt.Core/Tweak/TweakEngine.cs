@@ -1,6 +1,7 @@
 // Copyright (c) 2026 pcopt-suite contributors. Licensed under the MIT License.
 using System.Text;
 using Microsoft.Extensions.Logging;
+using PcOpt.Core.Config;
 using PcOpt.Core.Journal;
 using PcOpt.Core.Platform;
 // 别名消歧：Journal 在本命名空间作用域内既指 PcOpt.Core.Journal 命名空间又指同名模型类型
@@ -210,10 +211,13 @@ public sealed class TweakEngine
 
         var sessionId = sessionResult.Value!;
         var appliedAt = DateTime.UtcNow;
+        // 规则定义快照：供崩溃 / 重启恢复重建"仅会话期动态注册"的规则（如 IFEO 降级规则）。
+        // 尽力而为：测试替身等无法序列化的动作只跳过快照，绝不中断应用流程。
+        var ruleDefinitionYaml = TweakRuleWriter.TryWrite(rule, out var yaml) ? yaml : null;
         var entries = new List<JournalEntry>(rule.Actions.Length);
         for (var i = 0; i < rule.Actions.Length; i++)
         {
-            entries.Add(new JournalEntry(ruleId, i, snapshots[i], appliedAt));
+            entries.Add(new JournalEntry(ruleId, i, snapshots[i], appliedAt, revertedAt: null, ruleDefinitionYaml: ruleDefinitionYaml));
         }
 
         var append = _journalStore.AppendEntries(sessionId, entries);
@@ -339,6 +343,78 @@ public sealed class TweakEngine
     /// 查询规则当前是否已应用（以 Journal 未还原条目为准，跨进程重启有效）。
     /// </summary>
     public bool IsApplied(string ruleId, string product) => FindOpenEntries(ruleId, product).Count > 0;
+
+    /// <summary>
+    /// 按单条还原日志条目还原动作（T13 接入 <c>IActionRestorer</c>：开机恢复服务负责 LIFO 顺序，
+    /// 本方法只负责单条还原）。
+    /// 前提：该条目所属规则必须已加载（<see cref="RegisterRule"/> / YAML 解析）。
+    /// 失败原因明确（中文），不含用户数据（架构 8.2 / 8.3）。
+    /// </summary>
+    /// <param name="entry">待还原的还原日志条目（含原值快照 JSON）。</param>
+    public Result RestoreEntry(JournalEntry entry)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+
+        if (!_rules.TryGetValue(entry.RuleId, out var rule))
+        {
+            // 崩溃 / 重启恢复：仅会话期动态注册的规则（如 IFEO 降级）不在内存中，
+            // 尝试由条目内嵌的规则定义重建；重建失败才判定为"尚未加载"。
+            var rebuilt = TryRebuildRuleFromDefinition(entry);
+            if (rebuilt is null)
+            {
+                return Result.Fail($"规则“{entry.RuleId}”尚未加载，无法还原该条目");
+            }
+
+            rule = rebuilt;
+        }
+
+        if (entry.ActionIndex < 0 || entry.ActionIndex >= rule.Actions.Length)
+        {
+            return Result.Fail($"还原日志动作序号越界：规则“{entry.RuleId}”动作 {entry.ActionIndex}");
+        }
+
+        var action = rule.Actions[entry.ActionIndex];
+        var handler = ResolveHandler(action);
+        if (handler is null)
+        {
+            return Result.Fail($"规则“{entry.RuleId}”动作 {entry.ActionIndex} 没有注册的处理器");
+        }
+
+        return handler.Revert(action, entry.OriginalValueJson);
+    }
+
+    /// <summary>
+    /// 由还原日志条目内嵌的规则定义重建规则（崩溃 / 重启恢复动态规则用，架构 3.2 / PRD A-P0-5）。
+    /// 仅当条目携带 <see cref="JournalEntry.RuleDefinitionYaml"/>、解析成功且解析出的 Id
+    /// 与条目 RuleId 一致时成功；否则返回 null（不得凭异源定义误还原）。
+    /// </summary>
+    private TweakRule? TryRebuildRuleFromDefinition(JournalEntry entry)
+    {
+        if (string.IsNullOrWhiteSpace(entry.RuleDefinitionYaml))
+        {
+            return null;
+        }
+
+        var parsed = TweakRuleParser.Parse(entry.RuleDefinitionYaml);
+        if (!parsed.IsSuccess || parsed.Value is null)
+        {
+            _logger.LogWarning("还原日志内嵌的规则定义无法解析（规则: {RuleId}）：{Error}", entry.RuleId, parsed.Error);
+            return null;
+        }
+
+        if (!string.Equals(parsed.Value.Id, entry.RuleId, StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning(
+                "还原日志内嵌规则定义 Id 不一致（条目: {RuleId}，定义: {DefinedId}），已拒绝重建",
+                entry.RuleId,
+                parsed.Value.Id);
+            return null;
+        }
+
+        _rules[parsed.Value.Id] = parsed.Value;
+        _logger.LogInformation("已由还原日志重建动态规则：{RuleId}", entry.RuleId);
+        return parsed.Value;
+    }
 
     private List<(JournalEntry Entry, string SessionId)> FindOpenEntries(string ruleId, string product) =>
         _journalStore.ListSessions()

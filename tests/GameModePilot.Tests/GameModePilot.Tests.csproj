@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>PcOpt.Products.GameModePilot.Tests</RootNamespace>
+    <AssemblyName>GameModePilot.Tests</AssemblyName>
+    <Description>产品 A 单元测试：SessionEngine（Begin/Apply/Revert/Verify）、IFEO 降级分支、IPC 协议解析</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="FluentAssertions" Version="6.12.2" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Products\GameModePilot\GameModePilot.csproj" />
+  </ItemGroup>
+
+</Project>

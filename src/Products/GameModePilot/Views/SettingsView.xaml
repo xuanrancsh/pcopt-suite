@@ -1,0 +1,32 @@
+<UserControl x:Class="PcOpt.Products.GameModePilot.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="24">
+      <TextBlock Text="设置" FontWeight="SemiBold"
+                 FontSize="{DynamicResource PcOpt.Font.Size.Headline}" />
+
+      <CheckBox Content="开机时自动启动（在后台守护）" IsChecked="{Binding AutoStartEnabled}"
+                Margin="0,20,0,0" />
+      <TextBlock Text="默认关闭；勾选后登录 Windows 时会自动在后台守护，可随时取消。"
+                 Margin="0,6,0,0" TextWrapping="Wrap"
+                 Foreground="{DynamicResource PcOpt.Brush.TextSecondary}"
+                 FontSize="{DynamicResource PcOpt.Font.Size.Caption}" />
+      <TextBlock Text="{Binding Message}" Margin="0,8,0,0" TextWrapping="Wrap"
+                 Foreground="{DynamicResource PcOpt.Brush.Guard}" />
+
+      <TextBlock Text="外观" FontWeight="SemiBold" Margin="0,28,0,8"
+                 FontSize="{DynamicResource PcOpt.Font.Size.Title}" />
+      <StackPanel Orientation="Horizontal">
+        <RadioButton x:Name="ThemeSystem" Content="跟随系统" IsChecked="True" Margin="0,0,16,0"
+                     Checked="OnThemeChanged" />
+        <RadioButton x:Name="ThemeLight" Content="浅色" Margin="0,0,16,0" Checked="OnThemeChanged" />
+        <RadioButton x:Name="ThemeDark" Content="深色" Checked="OnThemeChanged" />
+      </StackPanel>
+
+      <TextBlock Text="{Binding VersionText}" Margin="0,40,0,0"
+                 Foreground="{DynamicResource PcOpt.Brush.TextSecondary}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
