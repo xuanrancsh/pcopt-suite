@@ -52,6 +52,11 @@ secrets.json
 pcopt-journal/
 *.log
 
+# ---------- 第三方二进制（由 scripts/fetch-presentmon.ps1 联网获取，不签入） ----------
+# 说明文档（README.md / NOTICE / .gitkeep）仍入库；仅忽略实际可执行文件与运行库。
+/ThirdParty/**/*.exe
+/ThirdParty/**/*.dll
+
 # ---------- 系统 / 编辑器 ----------
 Thumbs.db
 ehthumbs.db

@@ -1,0 +1,121 @@
+<UserControl x:Class="PcOpt.Products.FrameLab.Views.ReportView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PcOpt.UI.Controls;assembly=PcOpt.UI"
+             Background="Transparent">
+  <UserControl.Resources>
+    <Style x:Key="MetricLabel" TargetType="{x:Type TextBlock}">
+      <Setter Property="Foreground" Value="{DynamicResource PcOpt.Brush.TextSecondary}" />
+      <Setter Property="Margin" Value="0,6,0,0" />
+    </Style>
+    <Style x:Key="MetricValue" TargetType="{x:Type TextBlock}">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="HorizontalAlignment" Value="Right" />
+      <Setter Property="Margin" Value="0,6,0,0" />
+    </Style>
+  </UserControl.Resources>
+  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+    <Grid>
+      <!-- 空状态 -->
+      <controls:EmptyState Title="还没有报告"
+                           Description="去「测试台」跑一次测试，这里会自动生成帧时间报告与优化前后对比。"
+                           Icon="📄"
+                           VerticalAlignment="Top" Margin="0,40,0,0"
+                           Visibility="{Binding HasData, Converter={StaticResource InverseBoolToVis}}" />
+
+      <!-- 有数据 -->
+      <StackPanel Visibility="{Binding HasData, Converter={StaticResource BoolToVis}}">
+        <TextBlock Text="帧时间报告" FontSize="{DynamicResource PcOpt.Font.Size.Headline}" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding SessionInfo}" Foreground="{DynamicResource PcOpt.Brush.TextSecondary}"
+                   Margin="0,4,0,0" TextWrapping="Wrap" />
+
+        <controls:FrameChart Height="260" Margin="0,12,0,0"
+                             FrameTimes="{Binding FrameTimes}"
+                             AverageMs="{Binding AverageMs}"
+                             LowOnePercentMs="{Binding LowOnePercentMs}"
+                             Title="{Binding ChartTitle}" />
+
+        <!-- 关键指标 -->
+        <Border Background="{DynamicResource PcOpt.Brush.CardBackground}"
+                BorderBrush="{DynamicResource PcOpt.Brush.CardBorder}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource PcOpt.Radius.Card}"
+                Padding="20" Margin="0,12,0,0">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="0,0,20,0">
+              <TextBlock Text="平均帧率" Style="{StaticResource MetricLabel}" />
+              <TextBlock Text="{Binding AverageFpsText}" Style="{StaticResource MetricValue}"
+                         FontSize="{DynamicResource PcOpt.Font.Size.Title}"
+                         Foreground="{DynamicResource PcOpt.Brush.Primary.Solid}" />
+              <TextBlock Text="平均帧时间" Style="{StaticResource MetricLabel}" />
+              <TextBlock Text="{Binding AverageFrameTimeText}" Style="{StaticResource MetricValue}" />
+              <TextBlock Text="中位帧时间" Style="{StaticResource MetricLabel}" />
+              <TextBlock Text="{Binding MedianFrameTimeText}" Style="{StaticResource MetricValue}" />
+              <TextBlock Text="参与统计帧数" Style="{StaticResource MetricLabel}" />
+              <TextBlock Text="{Binding FrameCountText}" Style="{StaticResource MetricValue}" />
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+              <TextBlock Text="1% Low（统计百分位法）" Style="{StaticResource MetricLabel}" />
+              <TextBlock Text="{Binding LowOnePercentPercentileText}" Style="{StaticResource MetricValue}"
+                         FontSize="{DynamicResource PcOpt.Font.Size.Title}"
+                         Foreground="{DynamicResource PcOpt.Brush.Processing}" />
+              <TextBlock Text="1% Low（时间占比法）" Style="{StaticResource MetricLabel}" />
+              <TextBlock Text="{Binding LowOnePercentTimeBasedText}" Style="{StaticResource MetricValue}"
+                         Foreground="{DynamicResource PcOpt.Brush.Processing}" />
+              <TextBlock Text="卡顿次数（帧时间 &gt; 2× 中位数）" Style="{StaticResource MetricLabel}" />
+              <TextBlock Text="{Binding StutterText}" Style="{StaticResource MetricValue}" />
+              <TextBlock Text="DPC / 中断延迟（近似）" Style="{StaticResource MetricLabel}" />
+              <TextBlock Text="{Binding DpcText}" Style="{StaticResource MetricValue}" />
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- 口径说明（PRD 4.7-3，强制展示） -->
+        <Border Background="{DynamicResource PcOpt.Brush.CardBackground}"
+                BorderBrush="{DynamicResource PcOpt.Brush.CardBorder}"
+                BorderThickness="1" CornerRadius="{DynamicResource PcOpt.Radius.Card}"
+                Padding="14" Margin="0,12,0,0">
+          <StackPanel>
+            <TextBlock Text="{Binding PreferredAlgorithmText}" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding AlgorithmNote}" TextWrapping="Wrap" Margin="0,4,0,0"
+                       Foreground="{DynamicResource PcOpt.Brush.TextSecondary}" />
+          </StackPanel>
+        </Border>
+
+        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+          <Button Content="导出帧时间 CSV" Command="{Binding ExportCsvCommand}" Padding="16,6" />
+          <Button Content="导出报告图 PNG" Command="{Binding ExportPngCommand}" Margin="10,0,0,0" Padding="16,6" />
+        </StackPanel>
+
+        <!-- 优化前后对比 -->
+        <TextBlock Text="优化前后对比" FontSize="{DynamicResource PcOpt.Font.Size.Title}" FontWeight="SemiBold"
+                   Margin="0,24,0,8" />
+
+        <Border Background="{DynamicResource PcOpt.Brush.CardBackground}"
+                BorderBrush="{DynamicResource PcOpt.Brush.CardBorder}"
+                BorderThickness="1" CornerRadius="{DynamicResource PcOpt.Radius.Card}"
+                Padding="16"
+                Visibility="{Binding HasComparison, Converter={StaticResource InverseBoolToVis}}">
+          <TextBlock Text="还没有对比数据：先在「测试台」测一次作为基线，做完优化后再测一次，这里会自动对比。"
+                     TextWrapping="Wrap" Foreground="{DynamicResource PcOpt.Brush.TextSecondary}" />
+        </Border>
+
+        <StackPanel Visibility="{Binding HasComparison, Converter={StaticResource BoolToVis}}">
+          <TextBlock Text="{Binding ComparisonConclusion}" FontWeight="SemiBold"
+                     FontSize="{DynamicResource PcOpt.Font.Size.Title}" />
+          <TextBlock Text="{Binding ComparisonSummary}" TextWrapping="Wrap" Margin="0,4,0,0"
+                     Foreground="{DynamicResource PcOpt.Brush.TextSecondary}" />
+          <controls:MetricCompareTable Rows="{Binding ComparisonRows}" Margin="0,12,0,0" />
+          <Button Content="导出对比 CSV" Command="{Binding ExportComparisonCsvCommand}"
+                  Margin="0,12,0,0" Padding="16,6" HorizontalAlignment="Left" />
+          <TextBlock Text="{Binding AlgorithmNote}" TextWrapping="Wrap" Margin="0,10,0,0"
+                     Foreground="{DynamicResource PcOpt.Brush.TextSecondary}" />
+        </StackPanel>
+      </StackPanel>
+    </Grid>
+  </ScrollViewer>
+</UserControl>

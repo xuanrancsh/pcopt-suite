@@ -1,0 +1,2 @@
+# 占位文件：保证 ThirdParty\PresentMon 目录随仓库保留。
+# 将 PresentMon.exe 放入本目录即可让 FrameLab 开始采集（详见同目录 README.md）。

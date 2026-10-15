@@ -14,10 +14,29 @@
     <PackageReference Include="WPF-UI" Version="4.0.2" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      随包 PresentMon 二进制（MIT，仓库根 ThirdParty\PresentMon\）。
+      出于"套件可离线构建、不签入第三方二进制"的考虑，仓库仅保留 README / NOTICE / .gitkeep，
+      实际 PresentMon.exe 由 scripts\fetch-presentmon.ps1 在联网环境获取后放入。
+      缺失时产品优雅降级并给出获取指引（环境约束），绝不崩溃。
+    -->
+    <None Include="..\..\..\ThirdParty\PresentMon\**\*"
+          Exclude="..\..\..\ThirdParty\PresentMon\.gitkeep"
+          Link="PresentMon\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\PcOpt.UI\PcOpt.UI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 供单元测试访问 internal 成员（PresentMon 命令行构造等） -->
+    <InternalsVisibleTo Include="FrameLab.Tests" />
   </ItemGroup>
 
 </Project>

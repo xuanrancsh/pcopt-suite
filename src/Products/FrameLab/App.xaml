@@ -1,13 +1,27 @@
 <Application x:Class="PcOpt.Products.FrameLab.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="MainWindow.xaml">
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:conv="clr-namespace:PcOpt.Products.FrameLab.Converters">
+    <!--
+      产品 C 应用资源。
+      WPF-UI（Fluent）主题 + 控件字典；默认挂载 PcOpt.UI 深色 Palette，
+      PcOptThemeService 启动后按"跟随系统"整体替换，深浅色切换无闪烁（PRD C-P0-7）。
+    -->
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ui:ThemesDictionary Theme="Light" xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" />
-                <ui:ControlsDictionary xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" />
+                <ui:ThemesDictionary Theme="Dark" />
+                <ui:ControlsDictionary />
+                <ResourceDictionary Source="/PcOpt.UI;component/Themes/Palette.Dark.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- 布尔 → 可见性（内置） -->
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+            <!-- 反相布尔 → 可见性（条件为假时显示提示条） -->
+            <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
+            <!-- 反相布尔（忙碌时禁用控件） -->
+            <conv:InverseBooleanConverter x:Key="InverseBool" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

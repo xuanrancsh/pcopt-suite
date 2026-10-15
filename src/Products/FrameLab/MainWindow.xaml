@@ -2,26 +2,94 @@
                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 xmlns:controls="clr-namespace:PcOpt.UI.Controls;assembly=PcOpt.UI"
+                 xmlns:views="clr-namespace:PcOpt.Products.FrameLab.Views"
+                 xmlns:vm="clr-namespace:PcOpt.Products.FrameLab.ViewModels"
                  Title="帧验 FrameLab"
-                 Width="1100" Height="720"
+                 Width="1160" Height="780"
+                 MinWidth="960" MinHeight="620"
                  WindowStartupLocation="CenterScreen"
                  ExtendsContentIntoTitleBar="True"
                  WindowBackdropType="Mica">
-    <Grid>
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <TextBlock Text="帧验 FrameLab（产品 C）"
-                       FontSize="28"
-                       HorizontalAlignment="Center" />
-            <TextBlock Text="骨架阶段：先测量、再优化、前后对比报告，用数据证明每项调整有没有用。"
-                       FontSize="14"
-                       Opacity="0.7"
-                       Margin="0,8,0,0"
-                       HorizontalAlignment="Center" />
-            <TextBlock Text="界面与功能在阶段 3 开发（见 docs/04-架构设计.md 任务 T31-T37）。"
-                       FontSize="12"
-                       Opacity="0.5"
-                       Margin="0,16,0,0"
-                       HorizontalAlignment="Center" />
-        </StackPanel>
+
+  <Window.Resources>
+    <!-- 模块 ViewModel → View 隐式映射（MVVM 导航核心） -->
+    <DataTemplate DataType="{x:Type vm:TestBenchViewModel}">
+      <views:TestBenchView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:ReportViewModel}">
+      <views:ReportView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:DiagnoseViewModel}">
+      <views:DiagnoseView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
+      <views:HistoryView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+      <views:SettingsView />
+    </DataTemplate>
+  </Window.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="48" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <!-- 顶栏：产品名 + 主题切换 -->
+    <Grid Grid.Row="0" Margin="16,0">
+      <TextBlock Text="🧪 帧验 FrameLab" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+        <TextBlock Text="主题" VerticalAlignment="Center"
+                   Foreground="{DynamicResource PcOpt.Brush.TextSecondary}"
+                   Margin="0,0,8,0" />
+        <ComboBox x:Name="ThemeSelector" Width="120" VerticalAlignment="Center"
+                  SelectionChanged="OnThemeSelectionChanged">
+          <ComboBoxItem Content="跟随系统" IsSelected="True" />
+          <ComboBoxItem Content="浅色" />
+          <ComboBoxItem Content="深色" />
+        </ComboBox>
+      </StackPanel>
     </Grid>
+
+    <!-- 主体：左侧导航 + 右侧内容 -->
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="212" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <ListBox x:Name="NavList"
+               Grid.Column="0"
+               Margin="8,0,4,8"
+               Background="Transparent"
+               BorderThickness="0"
+               ItemsSource="{Binding NavItems}"
+               SelectedItem="{Binding SelectedNav}">
+        <ListBox.ItemContainerStyle>
+          <Style TargetType="{x:Type ListBoxItem}">
+            <Setter Property="Padding" Value="10,9" />
+            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+          </Style>
+        </ListBox.ItemContainerStyle>
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="{Binding Icon}" FontSize="16" VerticalAlignment="Center" />
+              <TextBlock Text="{Binding Title}" Margin="10,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+
+      <ContentControl Grid.Column="1" Margin="8,0,16,12"
+                      Content="{Binding CurrentPage}" />
+    </Grid>
+
+    <controls:ToastHost x:Name="Toasts" Grid.Row="0" Grid.RowSpan="2" Panel.ZIndex="100"
+                        HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="24" />
+  </Grid>
 </ui:FluentWindow>

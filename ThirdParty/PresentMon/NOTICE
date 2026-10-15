@@ -1,0 +1,31 @@
+PresentMon
+==========
+
+本目录在部署时用于放置 PresentMon 可执行文件（PresentMon.exe）。
+PresentMon 为 Intel 开源的帧时间捕获工具，采用 MIT 许可。
+
+  Copyright (c) 2018-2024 Intel Corporation
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+项目来源：https://github.com/GameTechDev/PresentMon
+
+说明：本套件以“子进程”方式调用 PresentMon（未修改其源码、未静态链接），
+PresentMon.exe 不随本仓库分发，由使用者在联网环境经 scripts/fetch-presentmon.ps1
+获取后自行放置到本目录。
