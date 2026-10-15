@@ -127,9 +127,34 @@ public sealed class R2FixVerificationTests
 
     private static int _unobserved;
 
+    /// <summary>
+    /// 专用探针异常：仅由本测试类内的 <see cref="ThrowingDpcSampler"/> 抛出。
+    /// <para>
+    /// <c>TaskScheduler.UnobservedTaskException</c> 是<b>进程级</b>全局事件，而 xUnit 默认在同进程内
+    /// <b>并行运行不同测试类</b>。若对任意未观察异常都计数，则其它测试类（如 DpcRaceStressTests）在
+    /// 同进程内产生的未观察异常会被误算到本断言上（跨类污染 → 偶发假失败）。
+    /// </para>
+    /// <para>
+    /// 只对本测试注入的探针类型计数，即可排除跨类污染；同时<b>不降低强度</b>：产品若未观察 DPC 采样
+    /// 任务的异常，泄漏出来的正是该探针类型 → 仍会被计数 → 断言仍会失败（真实泄漏仍被捕获）。
+    /// </para>
+    /// </summary>
+    private sealed class SamplerFaultProbeException : Exception
+    {
+        public SamplerFaultProbeException(string message) : base(message)
+        {
+        }
+    }
+
     private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
-        Interlocked.Increment(ref _unobserved);
+        // 仅统计"本测试注入的探针异常"；无关测试类在进程级事件里的异常不计入（避免跨类污染）。
+        var isProbeLeak = e.Exception.Flatten().InnerExceptions.Any(x => x is SamplerFaultProbeException);
+        if (isProbeLeak)
+        {
+            Interlocked.Increment(ref _unobserved);
+        }
+
         e.SetObserved();
     }
 
@@ -162,7 +187,7 @@ public sealed class R2FixVerificationTests
                 Thread.Sleep(_delayMs);
             }
 
-            throw new InvalidOperationException("采样器故意故障（测试替身）");
+            throw new SamplerFaultProbeException("采样器故意故障（测试探针）");
         }
     }
 
