@@ -199,6 +199,41 @@ public sealed class R2FixVerificationTests
         }
     }
 
+    /// <summary>
+    /// 阳性对照专用采样器：与测试<b>信号握手</b>，确保 <c>cts.Dispose()</c> 一定发生在"采样器访问令牌"之前，
+    /// 从而<b>不依赖墙钟（Thread.Sleep 会过冲）/ 调度速度</b>地确定触发 <see cref="ObjectDisposedException"/>。
+    /// </summary>
+    private sealed class HandshakeDisposalSampler : IDpcSampler
+    {
+        private readonly ManualResetEventSlim _started = new(false);
+        private readonly ManualResetEventSlim _disposed = new(false);
+        private int _disposedObserved;
+
+        /// <summary>采样器已进入 Sample（测试据此确保 Dispose 在其后触发）。</summary>
+        public ManualResetEventSlim Started => _started;
+
+        public int DisposedObserved => Volatile.Read(ref _disposedObserved);
+
+        /// <summary>测试在释放 CTS 后调用，放行采样器去访问令牌。</summary>
+        public void SignalDisposed() => _disposed.Set();
+
+        public Result<DpcStats> Sample(TimeSpan duration, CancellationToken cancellationToken)
+        {
+            _started.Set();                              // 通知测试：采样器已进入
+            _disposed.Wait(TimeSpan.FromSeconds(30));    // 等测试确认 CTS 已释放（有界，避免永久阻塞）
+            try
+            {
+                _ = cancellationToken.WaitHandle;        // 此刻 CTS 必已释放 → ObjectDisposedException
+            }
+            catch (ObjectDisposedException)
+            {
+                Interlocked.Increment(ref _disposedObserved);
+            }
+
+            return Result<DpcStats>.Ok(new DpcStats(1.0, 3.0, 10));
+        }
+    }
+
     /// <summary>反复触发 GC / 终结器若干轮（仅用于"未观察异常"附加网；断言恒为 0，不会误报失败）。</summary>
     private static void GcRounds(int rounds)
     {
@@ -213,20 +248,23 @@ public sealed class R2FixVerificationTests
 
     /// <summary>
     /// 确定性阳性对照（替代原 GC 时机依赖写法）：复刻"任务仍在运行就释放 CTS"的旧写法，
-    /// 证明检测器确实能捕获"CTS 提前释放"。不依赖 GC / 机器速度，确定通过。
+    /// 证明检测器确实能捕获"CTS 提前释放"。用<b>信号握手</b>替代 <c>Thread.Sleep</c>，
+    /// 确保 Dispose 必在采样器访问令牌之前触发 → 与机器调度速度无关，确定通过。
     /// </summary>
     [Fact]
     public void D4Detector_PositiveControl_DetectsEarlyDisposal()
     {
-        var sampler = new DisposalDetectingSampler(500);
+        var sampler = new HandshakeDisposalSampler();
         using var cts = new CancellationTokenSource();
         var task = Task.Run(() => sampler.Sample(TimeSpan.FromSeconds(1), cts.Token));
 
-        Thread.Sleep(100);   // 让任务先开始执行
-        cts.Dispose();       // 提前释放（模拟旧 using 写法在任务结束前释放）
+        // 等采样器确实进入 Sample（宽裕上限），再做 Dispose —— 而非依赖 Thread.Sleep 的墙钟时点。
+        sampler.Started.Wait(TimeSpan.FromSeconds(30)).Should().BeTrue("采样任务应已开始执行");
+        cts.Dispose();               // 确定发生在采样器访问令牌之前（模拟旧 using 写法在任务结束前释放）
+        sampler.SignalDisposed();    // 放行采样器去访问令牌（此刻 CTS 已释放）
 
         var deadline = Stopwatch.StartNew();
-        while (!task.IsCompleted && deadline.Elapsed < TimeSpan.FromSeconds(10))
+        while (!task.IsCompleted && deadline.Elapsed < TimeSpan.FromSeconds(30))
         {
             Thread.Sleep(20);
         }
