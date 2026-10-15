@@ -1,0 +1,195 @@
+name: Release
+
+# 触发：推送 v* 标签，或手动指定标签。
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '发布标签（如 v0.1.0）；手动触发时必填'
+        required: false
+        default: ''
+
+# 创建 Release 需要写权限；其余作业保持只读思维（本文件仅此一处需要写）
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+  RUNTIME_IDENTIFIER: win-x64
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 发布前质量门：构建 0 警告 + 全量测试 + 官方规则包验签
+  # ---------------------------------------------------------------------------
+  gate:
+    name: 发布前质量门
+    runs-on: windows-latest
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v4
+
+      - name: 安装 .NET 9 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: 还原依赖
+        run: dotnet restore pcopt-suite.sln
+
+      - name: 构建（Release，警告即错误）
+        run: dotnet build pcopt-suite.sln -c Release --no-restore -p:TreatWarningsAsErrors=true
+
+      - name: 全量测试（Release）
+        run: dotnet test pcopt-suite.sln -c Release --no-build
+
+      - name: 官方规则包签名校验
+        run: dotnet run --project src/Tools/PcOpt.RuleSigner -c Release -- rules/tweaks --verify
+
+      - name: 依赖许可证扫描
+        shell: pwsh
+        run: ./scripts/check-licenses.ps1
+
+      - name: 源码静态扫描（无硬编码密钥 / 无未授权外联）
+        shell: pwsh
+        run: ./scripts/check-no-secrets.ps1
+
+  # ---------------------------------------------------------------------------
+  # 打包三产品并创建 Release
+  # ---------------------------------------------------------------------------
+  release:
+    name: 打包并发布 (win-x64)
+    runs-on: windows-latest
+    needs: gate
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v4
+
+      - name: 安装 .NET 9 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: 解析发布标签
+        id: ver
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF_TYPE -eq 'tag') { $tag = $env:GITHUB_REF_NAME } else { $tag = '${{ inputs.tag }}' }
+          if ([string]::IsNullOrWhiteSpace($tag)) {
+            Write-Error '未能确定发布标签：请通过 v* 标签推送，或手动触发时填写 tag。'
+            exit 1
+          }
+          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "version=$($tag.TrimStart('v'))" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          Write-Host "发布版本：$tag"
+
+      - name: 还原依赖
+        run: dotnet restore pcopt-suite.sln
+
+      # 三个产品均以「框架依赖」方式发布（体积小）；用户需安装 .NET 9 Desktop Runtime（见 README）
+      - name: 发布产品 A（GameModePilot）
+        run: >
+          dotnet publish src/Products/GameModePilot/GameModePilot.csproj -c Release
+          -r ${{ env.RUNTIME_IDENTIFIER }} --self-contained false
+          -o publish/GameModePilot
+
+      - name: 发布产品 B（GameOptBox）
+        run: >
+          dotnet publish src/Products/GameOptBox/GameOptBox.csproj -c Release
+          -r ${{ env.RUNTIME_IDENTIFIER }} --self-contained false
+          -o publish/GameOptBox
+
+      - name: 发布产品 C（FrameLab）
+        run: >
+          dotnet publish src/Products/FrameLab/FrameLab.csproj -c Release
+          -r ${{ env.RUNTIME_IDENTIFIER }} --self-contained false
+          -o publish/FrameLab
+
+      - name: PresentMon 二进制说明（不随包分发）
+        shell: pwsh
+        run: |
+          Write-Host '──────────────────────────────────────────────────────────────'
+          Write-Host ' 产品 C 的帧时间采集依赖 PresentMon（Intel，MIT 许可）。'
+          Write-Host ' 出于「不签入第三方二进制」的原则，发布包默认【不含】PresentMon.exe。'
+          Write-Host ' 用户获取方式（需联网）：'
+          Write-Host '   1) 运行脚本： powershell -ExecutionPolicy Bypass -File .\scripts\fetch-presentmon.ps1'
+          Write-Host '   2) 或将 PresentMon.exe 手动放入程序目录下的 PresentMon\ 文件夹'
+          Write-Host ' 缺失时 FrameLab 会给出明确提示并优雅降级，不会崩溃。'
+          Write-Host ' 详见 ThirdParty\PresentMon\README.md 与 NOTICE。'
+          Write-Host '──────────────────────────────────────────────────────────────'
+
+      # 可选（默认关闭）：维护者对官方规则包签名。私钥经 GitHub Secrets 注入，
+      # 绝不写入仓库、绝不出现在日志（《03-开源计划.md》第 5 章 / SECURITY.md）。
+      # 官方规则包已由维护者离线签名并入库（rules/tweaks/*.sig）；此处仅为发布期再签名的占位示例。
+      - name: 规则包签名（占位，默认关闭）
+        if: ${{ false }}
+        shell: pwsh
+        env:
+          RULE_SIGNING_PRIVATE_KEY: ${{ secrets.RULE_SIGNING_PRIVATE_KEY }}
+        run: |
+          Write-Host '占位：仅在维护者显式启用时运行。'
+          Write-Host '私钥经 Secrets 注入并在内存中使用，不落盘、不进日志。'
+
+      - name: 组装发布包（附 LICENSE / NOTICE / 规则包 / 说明）
+        shell: pwsh
+        run: |
+          $version = '${{ steps.ver.outputs.version }}'
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          $products = @{
+            'GameModePilot' = 'publish/GameModePilot'
+            'GameOptBox'    = 'publish/GameOptBox'
+            'FrameLab'      = 'publish/FrameLab'
+          }
+          foreach ($name in $products.Keys) {
+            $dir = $products[$name]
+            Copy-Item -LiteralPath 'LICENSE' -Destination $dir -Force
+            Copy-Item -LiteralPath 'NOTICE'  -Destination $dir -Force
+            Copy-Item -LiteralPath 'README.md' -Destination $dir -Force
+            $zip = "artifacts/pcopt-$name-$version-win-x64.zip"
+            if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip -Force }
+            Compress-Archive -Path "$dir/*" -DestinationPath $zip -Force
+            Write-Host "已打包：$zip ($([Math]::Round((Get-Item -LiteralPath $zip).Length / 1MB, 2)) MB)"
+          }
+
+      - name: 生成校验和（SHA256）
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path artifacts -Filter '*.zip' | ForEach-Object {
+            $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash
+            "$hash  $($_.Name)" | Out-File -FilePath artifacts/SHA256SUMS.txt -Append -Encoding ascii
+          }
+          Get-Content -LiteralPath artifacts/SHA256SUMS.txt
+
+      - name: 创建 Release 并上传产物
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = '${{ steps.ver.outputs.tag }}'
+          $notes = @'
+          ## 资产说明
+
+          - 每个产品一个 `*-win-x64.zip`：**框架依赖**包，需先安装 .NET 9 Desktop Runtime（https://dotnet.microsoft.com/download/dotnet/9.0）。
+          - 解压后运行对应 `.exe`。部分系统级调整需要管理员权限（应用时会提示）。
+          - `SHA256SUMS.txt`：发布包校验和。
+
+          ## 产品 C（FrameLab）额外步骤
+
+          FrameLab 的帧时间采集依赖 PresentMon（https://github.com/GameTechDev/PresentMon ，MIT）。
+          由于不随包分发第三方二进制，请联网执行 `scripts/fetch-presentmon.ps1`，或手动将
+          `PresentMon.exe` 放入程序目录下的 `PresentMon\` 文件夹。
+
+          ## 安全与还原
+
+          所有调整均先写还原日志（Journal），退出/崩溃后自动恢复原状。应用前请创建系统还原点。
+          详见 SECURITY.md 与 README.md 免责声明。
+          '@
+          $assets = @(Get-ChildItem -Path 'artifacts/*.zip', 'artifacts/SHA256SUMS.txt' | ForEach-Object { $_.FullName })
+          gh release create $tag --title "pcopt-suite $tag" --notes $notes --generate-notes @assets

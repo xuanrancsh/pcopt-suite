@@ -18,8 +18,20 @@
 
 ## 贡献规则
 
-社区可对 `tweaks/*.yaml` 提 PR（说明见 CONTRIBUTING.md，T38 完善）。合入官方包的规则
+社区可对 `tweaks/*.yaml` 提 PR（完整流程与评审要点见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7 节）。合入官方包的规则
 由维护者签名后随下个 Release 发布；社区亦可自建规则包并附带自己的公钥，用户在导入时会
 看到"非官方签名，风险自担"提示。
 
-> 注意：本目录当前仅有签名公钥；首发规则包内容在后续任务（T21/T30）生产中回填。
+## 当前内容
+
+- 官方规则包：`tweaks/*.yaml` **68 条** + 对应 `*.sig` 签名（首发规则包，已随仓库入库）；
+- 游戏数据库：`games.yaml`（游戏 executable 特征库，供产品 A 的启动识别使用）；
+- 公钥：`public.key`。
+
+## 本地验签（无需联网）
+
+```bash
+dotnet run --project src/Tools/PcOpt.RuleSigner -c Release -- rules/tweaks --verify
+```
+
+CI（`.github/workflows/ci.yml`）会在每次提交/PR 上自动执行上述验签，任一条不过即构建失败。

@@ -1,77 +1,107 @@
-# NOTICE — 第三方署名与致谢
+# NOTICE — 第三方署名、许可证与致谢
 
-pcopt-suite 采用 MIT 许可证发布（见根目录 `LICENSE`）。
-本文件依据《03-开源计划.md》第 3 章维护：列出所有**直接依赖**、**开发/测试依赖**、
-**计划集成**与**功能参考**项目的名称、许可证与用途。集成任何第三方库前必须先在此登记。
+pcopt-suite 采用 **MIT** 许可证发布（见根目录 [`LICENSE`](LICENSE)）。
 
-## 直接依赖（编译进产品）
+本文件依据《[docs/03-开源计划.md](docs/03-开源计划.md)》第 3 章维护：**登记全部直接依赖、开发/测试依赖、
+运行期可选依赖与功能参考项目**（名称 / 作者 / 仓库 / 许可证 / 用途）。集成任何第三方库前必须先在
+此登记，并由 CI 的许可证扫描（`scripts/check-licenses.ps1`）强制约束。
 
-| 项目 | 作者 / 组织 | 仓库 | 许可证 | 用途 |
-|---|---|---|---|---|
-| WPF-UI (lepoco/wpf-ui) | lescps | https://github.com/lepoco/wpfui | MIT | Fluent UI 组件、Mica/云母、深浅色主题 |
-| CommunityToolkit.Mvvm | .NET Foundation | https://github.com/CommunityToolkit/dotnet | MIT | MVVM 基础设施（源码生成器） |
-| Microsoft.Extensions.DependencyInjection | Microsoft | https://github.com/dotnet/runtime | MIT | 依赖注入容器 |
-| Microsoft.Extensions.Logging.Abstractions | Microsoft | https://github.com/dotnet/runtime | MIT | 日志抽象（内核日志约定，架构 8.3） |
-| YamlDotNet | Antoine Aubry | https://github.com/aaubry/YamlDotNet | MIT | YAML 规则包解析 |
-| NSec.Cryptography | ektrah | https://github.com/ektrah/nsec | BSD-3-Clause | Ed25519 规则包签名验证（libsodium 实现） |
-| Microsoft.Win32.Registry | Microsoft | https://github.com/dotnet/runtime | MIT | 注册表访问（.NET 平台组件） |
-| LibreHardwareMonitorLib | LibreHardwareMonitor contributors | https://github.com/LibreHardwareMonitor/LibreHardwareMonitor | MPL-2.0 | 硬件传感器读数（T6；作依赖调用未修改源码，分发须附其 LICENSE） |
-| Microsoft.Diagnostics.Tracing.TraceEvent | Microsoft | https://github.com/microsoft/perfview | MIT | ETW 内核进程事件订阅（T8 GameWatcher；仅 Windows） |
+> 版权归属：本项目源码版权归 **pcopt-suite contributors**（见 LICENSE）。各第三方组件的版权归其各自作者所有，
+> 下列组件均按各自许可证的条款被**以依赖方式调用**，未修改其源码（除非另有说明）。
 
-> NSec.Cryptography 为 BSD-3-Clause 许可证，仅作为 NuGet 依赖调用、未修改其源码；
-> 依据 BSD-3 条款保留其版权声明（见上文链接仓库 LICENSE）。
-> LibreHardwareMonitorLib 为 MPL-2.0：仅以 NuGet 依赖方式调用、未修改其源码；
-> MPL-2.0 对"更大作品"按原许可证发布无碍，分发时须随附其版权与许可证声明（见仓库 LICENSE）。
+---
 
-## 开发 / 测试依赖（不随产品分发）
+## 一、运行期直接依赖（编译进产品）
 
-| 项目 | 许可证 | 用途 |
-|---|---|---|
-| xUnit | Apache-2.0 | 单元测试框架 |
-| FluentAssertions | Apache-2.0 | 断言库 |
-| Moq | BSD-3-Clause | 测试替身（mock） |
-| Microsoft.NET.Test.Sdk | MIT | 测试宿主 |
+| 组件 | 版本 | 作者 / 组织 | 仓库 | 许可证 | 用途 |
+|---|---|---|---|---|---|
+| WPF-UI (lepoco/wpfui) | 4.0.2 | lepo.co | https://github.com/lepoco/wpfui | MIT | Fluent 控件、Mica/云母、深浅色主题 |
+| CommunityToolkit.Mvvm | 8.4.0 | .NET Foundation | https://github.com/CommunityToolkit/dotnet | MIT | MVVM 基础设施（`[ObservableProperty]`/`[RelayCommand]` 源生成器） |
+| Microsoft.Extensions.DependencyInjection | 9.0.0 | Microsoft | https://github.com/dotnet/runtime | MIT | 依赖注入容器（组合根） |
+| Microsoft.Extensions.Logging | 9.0.0 | Microsoft | https://github.com/dotnet/runtime | MIT | 日志抽象（内核日志约定，架构 §8.3） |
+| Microsoft.Extensions.Logging.Abstractions | 9.0.0 | Microsoft | https://github.com/dotnet/runtime | MIT | 日志抽象包 |
+| Microsoft.Win32.Registry | 5.0.0 | Microsoft | https://github.com/dotnet/runtime | MIT | 注册表访问（.NET 平台组件） |
+| System.Management | 10.0.2 | Microsoft | https://github.com/dotnet/runtime | MIT | WMI 硬件/系统信息查询（只读） |
+| YamlDotNet | 16.3.0 | Antoine Aubry 及贡献者 | https://github.com/aaubry/YamlDotNet | MIT | YAML 规则包解析 |
+| Microsoft.Diagnostics.Tracing.TraceEvent | 3.2.8 | Microsoft | https://github.com/microsoft/perfview | MIT | ETW 内核进程事件订阅（产品 A 的 GameWatcher；仅 Windows） |
+| NSec.Cryptography | 26.4.0 | ektrah | https://github.com/ektrah/nsec | **BSD-3-Clause** | Ed25519 规则包签名验证（底层为 libsodium） |
+| LibreHardwareMonitorLib | 0.9.6 | LibreHardwareMonitor contributors | https://github.com/LibreHardwareMonitor/LibreHardwareMonitor | **MPL-2.0** | 硬件传感器读数（温度/功耗，只读） |
 
-## 计划集成（尚未引入，集成前完成许可证核验并回填本表）
+### 关于非 MIT 依赖的义务说明
 
-| 项目 | 许可证 | 用途 | 计划任务 |
+- **NSec.Cryptography（BSD-3-Clause）**：仅作 NuGet 依赖调用，**未修改其源码**。依据 BSD-3 条款，
+  在此保留其版权声明；完整许可证文本见其仓库 `LICENSE`。
+- **LibreHardwareMonitorLib（MPL-2.0）**：仅作 NuGet 依赖调用，**未修改其源码**（MPL-2.0 对"更大作品"
+  按原许可证发布无碍）。分发本产品时须随附其版权与许可证声明；完整文本见其仓库 `LICENSE`。
+- **libsodium（ISC，NSec.Cryptography 的传递依赖）**：以其原生库形式随 NSec 分发，许可证为 ISC。
+
+---
+
+## 二、运行期可选依赖（不随仓库/发布包分发二进制）
+
+| 组件 | 作者 / 组织 | 仓库 | 许可证 | 用途 | 获取方式 |
+|---|---|---|---|---|---|
+| PresentMon | Intel Corporation | https://github.com/GameTechDev/PresentMon | MIT | 产品 C 以**子进程**方式调用，采集帧时间 | 用户联网经 `scripts/fetch-presentmon.ps1` 获取，或手动放入程序目录 `PresentMon\` |
+
+> PresentMon **未修改源码、未静态链接**，仅以独立可执行文件形式由产品 C 调用。MIT 许可要求保留版权声明，
+> 相关声明见 [`ThirdParty/PresentMon/NOTICE`](ThirdParty/PresentMon/NOTICE)。
+> 出于"不签入第三方二进制"的原则，仓库与发布包**默认不含** `PresentMon.exe`；缺失时产品 C 明确提示并优雅降级。
+
+---
+
+## 三、开发 / 测试依赖（不随产品分发）
+
+| 组件 | 版本 | 许可证 | 用途 |
 |---|---|---|---|
-| PresentMon (Intel) | MIT | 帧时间捕获（子进程附带二进制） | T32 |
+| Microsoft.NET.Test.Sdk | 17.12.0 | MIT | 测试宿主 |
+| xunit | 2.9.2 | Apache-2.0 | 单元测试框架 |
+| xunit.runner.visualstudio | 2.8.2 | Apache-2.0 | xUnit 的 VSTest 适配器 |
+| FluentAssertions | 6.12.2 | Apache-2.0 | 断言库（**注意：v6.x 为 Apache-2.0；v8+ 已改为非自由许可，本项目锁定 6.x**） |
+| Moq | 4.20.72 | BSD-3-Clause | 测试替身（mock）；传递依赖 Castle.Core（Apache-2.0） |
 
-## 功能参考项目（致谢）
+> 上述仅供开发与 CI 使用，不随产品二进制分发。
 
-以下项目对本产品的架构与功能设计有启发意义。复制代码仅限 MIT / Apache-2.0 / BSD 系
-并保留原版权声明；GPL / source-available 系项目**仅思路参考、无任何代码复制**
-（《03-开源计划.md》2.3 借鉴边界铁律）。
+---
+
+## 四、功能参考与致谢（设计启发，按借鉴边界铁律处理）
+
+以下项目对本产品的架构与功能设计有启发意义。**复制代码仅限 MIT / Apache-2.0 / BSD 系并保留原版权声明**；
+**GPL / source-available 系项目仅思路参考、无任何代码复制**（《03-开源计划.md》§2.3 铁律）。
 
 **MIT / Apache-2.0 / BSD 系（可借鉴，保留声明）：**
 
-- GameShift (MIT) — state journal 与反作弊自动降级架构重点参考
+- GameShift (MIT) — state journal 与反作弊自动降级架构的重点参考
 - winutil (MIT) — preset 分层、tweak 组织方式
 - Win11Debloat (MIT) — tweak 组织方式
-- Sophia Script / SophiApp (MIT) — tweak/还原配对、VAC 友好声明
+- Sophia Script / SophiApp (MIT) — tweak / 还原配对、"VAC 友好"声明写法
 - privacy.sexy (MIT) — 脚本组织方式
-- PresentMon (MIT) — 产品 C 核心依赖（子进程集成）
+- PresentMon (MIT) — 产品 C 核心采集依赖（子进程集成）
 - CapFrameX (MIT) — 帧时间报告观感参考
 - BCU (Apache-2.0) — Steam 游戏识别、卸载残留扫描思路
 
 **GPL / PolyForm / source-available 系（仅思路参考，禁止复制代码）：**
 
 - Atlas、optimizerDuck、optimizerNXT、memreduct、simplewall、NexBox（GPL 系）
-- Winhance（PolyForm Shield，非 OSI）
+- Winhance（PolyForm Shield，非 OSI 许可）
 - Dism++（仓库仅多语言资源，主程序源码未完整开源 — 仅功能标杆参考）
 
-**待核验项（复制前必须逐项核验许可证）：**
+**待核验项（在相关代码被复制/集成前必须逐项核验许可证并回填本表）：**
 
 - privatezilla、RyTuneX、fps-booster、MPO-GPU-FIX（自定义 / 待核验）
+  > 现状：以上项目**均未复制任何代码**，仅作思路参考，故当前不构成许可证义务；若未来引入其代码，须先核验。
 
-## 合规承诺（PRD 第 6 章红线，源码可验证）
+---
 
-1. 不做显卡型号伪装：GPU 类注册表键**只读**（`ComplianceGuard` 路径黑名单 + 自动化测试断言）；
-2. 不注入游戏进程：无 DLL 注入 / 远程线程 / 驱动级 hook 代码；
-3. 不改游戏文件：不访问游戏目录；
-4. 不 hook 内存：不读写任何游戏进程内存；
-5. 检测到内核级反作弊时进程调度类操作自动降级 IFEO 注册表方案；
-6. Defender / 自动更新类 tweak 默认折叠且默认关闭；
-7. 所有 tweak 可还原：先写 Journal 后执行，LIFO 还原；
-8. 无遥测、无广告、纯本地：除更新检查（默认关闭）外无网络请求。
+## 五、本项目合规承诺（PRD 第 6 章红线，源码可验证）
+
+1. **不做显卡型号伪装**：GPU 类注册表键**只读**（`ComplianceGuard` 路径黑名单 + 自动化测试断言）；
+2. **不注入游戏进程**：无 DLL 注入 / 远程线程 / 驱动级 hook 代码；
+3. **不改游戏文件**：不访问游戏安装目录进行写操作；
+4. **不 hook 内存**：不读写任何游戏进程内存；
+5. **内核级反作弊自动降级**：检测到 Vanguard / EAC / BattlEye / RICOCHET / ACE 时，进程调度类操作自动切换为 IFEO 注册表方案；
+6. **敏感项默认关闭**：Defender / 自动更新类调整默认折叠且默认关闭；
+7. **所有调整可还原**：先写 Journal 后执行，LIFO 还原，崩溃/断电后下次启动自动恢复；
+8. **无遥测、无广告、纯本地**：除更新检查（**默认关闭**）外无任何网络请求；CI 有静态扫描强制约束。
+
+> 本文件的依赖清单由 CI 的 `scripts/check-licenses.ps1`（对照允许清单）与
+> `scripts/check-no-secrets.ps1`（密钥 / 外联白名单）持续校验；新增依赖必须同步更新本文件。

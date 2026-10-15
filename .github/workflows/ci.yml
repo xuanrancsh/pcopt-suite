@@ -6,27 +6,94 @@ on:
   pull_request:
   workflow_dispatch:
 
-# 权限最小化（开源计划 6.3）
+# 权限最小化（《03-开源计划.md》6.3）：CI 只读仓库内容
 permissions:
   contents: read
 
+# 同一分支/PR 的新提交取消旧的进行中构建，节省 runner 配额
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+
 jobs:
+  # ---------------------------------------------------------------------------
+  # 1) 构建与全量测试：内核 + 三产品（要求 0 警告 0 错误、全部用例通过）
+  # ---------------------------------------------------------------------------
   build-test:
-    name: build & test (windows-latest)
+    name: 构建与全量测试 (windows-latest)
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: 检出源码
+        uses: actions/checkout@v4
 
-      - name: Setup .NET 9 SDK
+      - name: 安装 .NET 9 SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
-      - name: Restore
+      - name: 还原依赖
         run: dotnet restore pcopt-suite.sln
 
-      - name: Build (Release)
-        run: dotnet build pcopt-suite.sln -c Release --no-restore
+      # 0 警告由 Directory.Build.props 的 TreatWarningsAsErrors 保障，此处显式重申
+      - name: 构建（Release，警告即错误）
+        run: dotnet build pcopt-suite.sln -c Release --no-restore -p:TreatWarningsAsErrors=true
 
-      - name: Test (Release)
-        run: dotnet test tests/PcOpt.Core.Tests -c Release --no-build --logger "console;verbosity=detailed"
+      # 说明：显式不指定 LogFileName —— 解决方案级测试会并行跑 4 个测试程序集，
+      # 固定文件名会互相覆盖；交给 VSTest 默认命名（每个程序集一个 TRX）即可。
+      - name: 全量测试（Release）
+        run: >
+          dotnet test pcopt-suite.sln -c Release --no-build
+          --logger "trx"
+          --results-directory artifacts/test-results
+
+      - name: 上传测试结果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: artifacts/test-results
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # 2) 合规检查：依赖许可证 / 官方规则包签名 / 无密钥无未授权外联
+  # ---------------------------------------------------------------------------
+  compliance:
+    name: 合规检查（许可证 / 规则签名 / 无密钥）
+    runs-on: windows-latest
+    needs: build-test
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v4
+
+      - name: 安装 .NET 9 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: 依赖许可证扫描（对照允许清单）
+        shell: pwsh
+        run: ./scripts/check-licenses.ps1
+
+      - name: 官方规则包签名校验（rules/tweaks，全量 68 条）
+        run: dotnet run --project src/Tools/PcOpt.RuleSigner -c Release -- rules/tweaks --verify
+
+      - name: 源码静态扫描（无硬编码密钥 / 无未授权外联）
+        shell: pwsh
+        run: ./scripts/check-no-secrets.ps1
+
+      # PresentMon 为运行期可选依赖（不随仓库分发二进制）；此处仅校验随包的说明与许可齐备
+      - name: 校验第三方随包说明（PresentMon）
+        shell: pwsh
+        run: |
+          $files = @('ThirdParty/PresentMon/README.md', 'ThirdParty/PresentMon/NOTICE', 'scripts/fetch-presentmon.ps1')
+          $missing = $files | Where-Object { -not (Test-Path -LiteralPath $_) }
+          if ($missing) {
+            Write-Error "缺少第三方随包说明文件：$($missing -join '、')"
+            exit 1
+          }
+          Write-Host "第三方随包说明齐备：$($files -join '、')"
