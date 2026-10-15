@@ -1,0 +1,16 @@
+id: privacy.error.reporting.disable
+category: 隐私
+risk: Notice
+displayName: 关闭错误报告上传
+description: 程序出错时不再收集并上传错误报告。
+consequenceHints:
+  - 崩溃诊断信息不再上报
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting
+    name: Disabled
+    value: 1
+    valueKind: DWord

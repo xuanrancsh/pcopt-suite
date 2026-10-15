@@ -1,0 +1,15 @@
+id: perf.visualfx.perfmode.set
+category: 性能
+risk: Safe
+displayName: 视觉特效改为性能优先
+description: 让 Windows 以性能优先的默认组合显示界面，自动关闭多余的动画与阴影。
+consequenceHints:
+  - 部分界面特效被关闭
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects
+    name: VisualFXSetting
+    value: 2
+    valueKind: DWord

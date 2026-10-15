@@ -1,0 +1,20 @@
+id: latency.mouse.threshold.disable
+category: 延迟
+risk: Safe
+displayName: 关闭鼠标加速的两级阈值
+description: 把鼠标加速的两个阈值都归零，彻底关闭系统指针加速。
+consequenceHints:
+  - 与"关闭鼠标加速"配合使用效果最好
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Control Panel\Mouse
+    name: MouseThreshold1
+    value: "0"
+    valueKind: String
+  - type: RegistrySet
+    path: HKCU\Control Panel\Mouse
+    name: MouseThreshold2
+    value: "0"
+    valueKind: String

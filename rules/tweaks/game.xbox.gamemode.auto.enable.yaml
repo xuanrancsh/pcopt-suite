@@ -1,0 +1,15 @@
+id: game.xbox.gamemode.auto.enable
+category: 游戏
+risk: Safe
+displayName: 开启 Windows 游戏模式
+description: 让 Windows 在你玩游戏时优先把 CPU/GPU 资源给游戏。
+consequenceHints:
+  - 后台程序在游戏时会稍微让路
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Software\Microsoft\GameBar
+    name: AllowAutoGameMode
+    value: 1
+    valueKind: DWord

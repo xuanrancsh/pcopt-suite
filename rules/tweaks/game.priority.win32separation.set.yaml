@@ -1,0 +1,16 @@
+id: game.priority.win32separation.set
+category: 游戏
+risk: Notice
+displayName: 让前台程序获得更多 CPU 时间片
+description: 调整前台/后台程序的 CPU 时间分配，让当前在玩的游戏更优先。
+consequenceHints:
+  - 后台任务会稍慢
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl
+    name: Win32PrioritySeparation
+    value: 38
+    valueKind: DWord

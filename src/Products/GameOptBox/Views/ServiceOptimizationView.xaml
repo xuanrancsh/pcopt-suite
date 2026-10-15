@@ -1,0 +1,74 @@
+<UserControl x:Class="PcOpt.Products.GameOptBox.Views.ServiceOptimizationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+  <Grid Margin="24">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <TextBlock Text="服务优化" FontSize="{DynamicResource PcOpt.Font.Size.Headline}" FontWeight="SemiBold" />
+
+    <Grid Grid.Row="1" Margin="0,12,0,12">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <TextBox Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
+               Padding="10,6" VerticalContentAlignment="Center"
+               ToolTip="搜索服务名或说明" />
+      <CheckBox Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center"
+                Content="只看可优化的非必要服务" IsChecked="{Binding OnlyNonEssential}" />
+      <Button Grid.Column="2" Margin="12,0,0,0" Padding="16,6"
+              Content="一键游戏模式方案" Command="{Binding ApplyPlanCommand}" />
+    </Grid>
+
+    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+      <StackPanel>
+        <TextBlock Text="{Binding Summary}" Foreground="{DynamicResource PcOpt.Brush.TextSecondary}"
+                   FontSize="{DynamicResource PcOpt.Font.Size.Caption}" Margin="0,0,0,8" />
+        <ItemsControl ItemsSource="{Binding Items}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Background="{DynamicResource PcOpt.Brush.CardBackground}"
+                      BorderBrush="{DynamicResource PcOpt.Brush.CardBorder}" BorderThickness="1"
+                      CornerRadius="{DynamicResource PcOpt.Radius.Card}" Padding="12" Margin="0,0,0,8">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="90" />
+                    <ColumnDefinition Width="90" />
+                    <ColumnDefinition Width="3*" />
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" VerticalAlignment="Center"
+                             TextTrimming="CharacterEllipsis" />
+                  <TextBlock Grid.Column="1" Text="{Binding CurrentStartText}"
+                             Foreground="{DynamicResource PcOpt.Brush.TextSecondary}" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="2" Text="{Binding RecommendedStartText}"
+                             VerticalAlignment="Center">
+                    <TextBlock.Style>
+                      <Style TargetType="{x:Type TextBlock}">
+                        <Setter Property="Foreground" Value="{DynamicResource PcOpt.Brush.TextPrimary}" />
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding AlreadyOptimal}" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource PcOpt.Brush.Success}" />
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </TextBlock.Style>
+                  </TextBlock>
+                  <TextBlock Grid.Column="3" Text="{Binding Description}" TextWrapping="Wrap"
+                             Foreground="{DynamicResource PcOpt.Brush.TextSecondary}"
+                             FontSize="{DynamicResource PcOpt.Font.Size.Caption}" VerticalAlignment="Center" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

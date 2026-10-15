@@ -1,0 +1,16 @@
+id: net.llmnr.disable
+category: 网络
+risk: Notice
+displayName: 关闭 LLMNR 名称解析
+description: 关闭本地组播名称解析，减少局域网内的广播噪声与潜在信息泄露。
+consequenceHints:
+  - 极少数依赖 LLMNR 的局域网共享可能受影响
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient
+    name: EnableMulticast
+    value: 0
+    valueKind: DWord

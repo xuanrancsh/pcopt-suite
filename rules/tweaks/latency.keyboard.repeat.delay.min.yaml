@@ -1,0 +1,15 @@
+id: latency.keyboard.repeat.delay.min
+category: 延迟
+risk: Safe
+displayName: 缩短键盘重复延迟
+description: 按住按键后更快开始重复输入。
+consequenceHints:
+  - 文字输入时连续字符会更快出现
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Control Panel\Keyboard
+    name: KeyboardDelay
+    value: "0"
+    valueKind: String

@@ -1,0 +1,16 @@
+id: game.fullscreen.optimization.disable
+category: 游戏
+risk: Notice
+displayName: 关闭全屏优化
+description: 让游戏以真正的独占全屏运行，部分老游戏能减少卡顿与输入延迟。
+consequenceHints:
+  - 少数游戏可能无法正常切换出去
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\System\GameConfigStore
+    name: GameDVR_FSEBehaviorMode
+    value: 2
+    valueKind: DWord

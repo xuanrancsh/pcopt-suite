@@ -1,0 +1,14 @@
+id: perf.svc.wsearch.manual
+category: 性能
+risk: Notice
+displayName: 让 Windows 搜索改为按需启动
+description: 把索引服务从自动启动改为手动，减少常驻磁盘占用；需要搜索时系统会自动拉起。
+consequenceHints:
+  - 首次搜索文件可能稍慢
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: ServiceStartType
+    serviceName: WSearch
+    target: Manual

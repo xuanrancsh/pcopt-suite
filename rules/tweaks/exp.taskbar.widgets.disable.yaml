@@ -1,0 +1,15 @@
+id: exp.taskbar.widgets.disable
+category: 体验
+risk: Safe
+displayName: 关闭任务栏小组件
+description: 关闭任务栏左侧的"小组件"入口（资讯与兴趣），减少后台加载。
+consequenceHints:
+  - 无法从任务栏打开小组件面板
+conditions:
+  - minBuild: 22000
+actions:
+  - type: RegistrySet
+    path: HKLM\SOFTWARE\Policies\Microsoft\Dsh
+    name: AllowNewsAndInterests
+    value: 0
+    valueKind: DWord

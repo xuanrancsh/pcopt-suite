@@ -1,0 +1,16 @@
+id: gpu.hags.disable
+category: 游戏
+risk: Notice
+displayName: 关闭硬件加速 GPU 调度
+description: 遇到闪屏、花屏或特定游戏异常时，可关闭硬件加速 GPU 调度以排除兼容问题。
+consequenceHints:
+  - 需要重启后完全生效
+  - 关闭后部分游戏延迟可能略增
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers
+    name: HwSchMode
+    value: 1
+    valueKind: DWord

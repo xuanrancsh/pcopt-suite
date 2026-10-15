@@ -1,0 +1,15 @@
+id: exp.explorer.launch.thispc
+category: 体验
+risk: Safe
+displayName: 打开资源管理器直接进入"此电脑"
+description: 打开文件资源管理器时默认停在"此电脑"，而不是"快速访问"。
+consequenceHints:
+  - 看不到最近使用的文件列表
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+    name: LaunchTo
+    value: 1
+    valueKind: DWord

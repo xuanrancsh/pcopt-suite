@@ -1,0 +1,17 @@
+id: privacy.coreisolation.vbs.disable
+category: 隐私
+risk: Danger
+displayName: 关闭内核隔离（内存完整性）
+description: 关闭基于虚拟化的安全（VBS）。这会降低系统对抗内核级恶意软件的能力，也可能影响部分反作弊兼容性。
+consequenceHints:
+  - 内核级防护能力下降
+  - 部分游戏的反作弊可能出现兼容问题
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard
+    name: EnableVirtualizationBasedSecurity
+    value: 0
+    valueKind: DWord

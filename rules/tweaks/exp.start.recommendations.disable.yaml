@@ -1,0 +1,15 @@
+id: exp.start.recommendations.disable
+category: 体验
+risk: Safe
+displayName: 关闭开始菜单推荐项
+description: 关闭开始菜单里的"推荐"内容，界面更干净。
+consequenceHints:
+  - 开始菜单不再显示推荐的应用/文件
+conditions:
+  - minBuild: 22000
+actions:
+  - type: RegistrySet
+    path: HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+    name: Start_IrisRecommendations
+    value: 0
+    valueKind: DWord

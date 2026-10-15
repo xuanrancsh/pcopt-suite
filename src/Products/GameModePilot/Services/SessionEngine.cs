@@ -195,8 +195,15 @@ public sealed class SessionEngine
             antiCheat = _current.AntiCheat;
         }
 
-        // 兜底：本产品名下任何仍处于 Open 的条目一并闭合（防跨进程残留污染幂等判定，缺陷 A）
-        foreach (var ruleId in ListOpenRuleIds())
+        // 兜底：本产品名下任何仍处于 Open 的条目一并闭合（防跨进程残留污染幂等判定，缺陷 A）。
+        // 关键路径：读还原日志失败必须显式失败——绝不因读不到而漏还原并误报"已还原"（缺陷 E）。
+        var openRuleIds = ListOpenRuleIds();
+        if (!openRuleIds.IsSuccess)
+        {
+            return Result<SessionEndResult>.Fail($"无法读取还原日志，已中止会话结束（避免误报已还原）：{openRuleIds.Error}");
+        }
+
+        foreach (var ruleId in openRuleIds.Value!)
         {
             if (!ids.Contains(ruleId, StringComparer.OrdinalIgnoreCase))
             {
@@ -278,13 +285,14 @@ public sealed class SessionEngine
     /// </summary>
     public Result<SessionEndResult> RevertAll(IProgress<SessionProgress>? progress = null)
     {
-        var ruleIds = _journalStore.ListSessions()
-            .Where(session => session.Status == JournalStatus.Open
-                && string.Equals(session.Product, ProductName, StringComparison.OrdinalIgnoreCase))
-            .SelectMany(session => session.OpenEntries)
-            .Select(entry => entry.RuleId)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
+        // 关键路径：读还原日志失败显式失败，绝不读不到就当作"无待还原项"并误报成功（缺陷 E）。
+        var openResult = ListOpenRuleIds();
+        if (!openResult.IsSuccess)
+        {
+            return Result<SessionEndResult>.Fail($"无法读取还原日志，已终止全部还原：{openResult.Error}");
+        }
+
+        var ruleIds = openResult.Value!;
 
         var loaded = new HashSet<string>(_engine.LoadedRules.Select(rule => rule.Id), StringComparer.OrdinalIgnoreCase);
         var revertedEntries = 0;
@@ -413,15 +421,27 @@ public sealed class SessionEngine
         return (outcome, report.SessionId, effectiveRule.Id);
     }
 
-    /// <summary>本产品名下仍处于 Open 的还原日志条目的规则 Id（去重；缺陷 A 兜底闭合用）。</summary>
-    private List<string> ListOpenRuleIds() =>
-        _journalStore.ListSessions()
+    /// <summary>
+    /// 本产品名下仍处于 Open 的还原日志条目的规则 Id（去重；缺陷 A 兜底闭合用）。
+    /// 关键路径：严格读取——读还原日志失败显式上抛，绝不把"读不到"当作"无待还原项"（缺陷 E）。
+    /// </summary>
+    private Result<List<string>> ListOpenRuleIds()
+    {
+        var sessions = _journalStore.TryListSessions();
+        if (!sessions.IsSuccess)
+        {
+            return Result<List<string>>.Fail(sessions.Error);
+        }
+
+        var ids = sessions.Value!
             .Where(session => session.Status == JournalStatus.Open
                 && string.Equals(session.Product, ProductName, StringComparison.OrdinalIgnoreCase))
             .SelectMany(session => session.OpenEntries)
             .Select(entry => entry.RuleId)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+        return Result<List<string>>.Ok(ids);
+    }
 
     /// <summary>更新状态快照并在锁外触发事件。</summary>
     private void SetPhase(

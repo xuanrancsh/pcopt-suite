@@ -1,0 +1,13 @@
+id: game.timer.resolution.high
+category: 游戏
+risk: Notice
+displayName: 把系统计时器精度调到 0.5 毫秒
+description: 让画面更跟手、操作延迟更低，占用极少，退出游戏后自动还原。
+consequenceHints:
+  - 个别老程序对高精度计时器敏感
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: TimerResolution
+    desiredResolution100Ns: 5000

@@ -1,0 +1,16 @@
+id: privacy.activity.history.disable
+category: 隐私
+risk: Notice
+displayName: 关闭活动历史记录
+description: 不再记录你在电脑上打开过的活动，也不再跨设备同步。
+consequenceHints:
+  - 时间线（活动历史）功能不可用
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SOFTWARE\Policies\Microsoft\Windows\System
+    name: EnableActivityFeed
+    value: 0
+    valueKind: DWord

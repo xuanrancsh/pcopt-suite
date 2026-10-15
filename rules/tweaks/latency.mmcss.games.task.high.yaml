@@ -1,0 +1,21 @@
+id: latency.mmcss.games.task.high
+category: 延迟
+risk: Notice
+displayName: 提升游戏任务的多媒体优先级
+description: 调整 MMCSS 中"Games"任务组的 CPU/GPU 优先级，让游戏线程更受照顾。
+consequenceHints:
+  - 后台多媒体任务优先级相对降低
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games
+    name: GPU Priority
+    value: 8
+    valueKind: DWord
+  - type: RegistrySet
+    path: HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games
+    name: Priority
+    value: 6
+    valueKind: DWord

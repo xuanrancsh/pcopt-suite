@@ -227,4 +227,56 @@ public sealed class JournalStoreTests : IDisposable
         reloaded.Entries[0].RevertedAt.Should().Be(appliedAt.AddMinutes(30));
         reloaded.Status.Should().Be(JournalStatus.Closed);
     }
+
+    // ---------- 严格 / 宽松读取语义（缺陷 E） ----------
+
+    /// <summary>损坏 JSON 文件在严格模式下仍应跳过并成功返回（无法解析的文件不含可用信息）。</summary>
+    [Fact]
+    public void TryListSessions_WithCorruptFile_ShouldSkipAndSucceed()
+    {
+        var valid = _store.BeginSession("GameOptBox").Value!;
+        File.WriteAllText(Path.Combine(_rootDirectory, "broken.json"), "{ 这不是合法 JSON ");
+
+        var strict = _store.TryListSessions();
+
+        strict.IsSuccess.Should().BeTrue(strict.Error);
+        strict.Value.Should().ContainSingle().Which.SessionId.Should().Be(valid);
+    }
+
+    /// <summary>
+    /// 关键路径语义：文件读不到（排他句柄 / 共享冲突）时严格模式必须失败，
+    /// 而宽松模式（展示用）跳过读不到的文件、不抛错。缺陷 E 的核心防线。
+    /// </summary>
+    [Fact]
+    public void TryListSessions_WhenFileLocked_ShouldFail_WhileLenientSkips()
+    {
+        var sessionId = _store.BeginSession("GameModePilot").Value!;
+        var path = _store.GetSessionPath(sessionId);
+
+        // 独占占用：模拟排他句柄 / 杀软实时扫描导致的持续读失败
+        using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            var strict = _store.TryListSessions();
+            strict.IsSuccess.Should().BeFalse("I/O 错误绝不能被静默吞成空会话");
+            strict.Error.Should().Contain("还原日志");
+
+            // 宽松扫描用于展示路径：跳过读不到的文件而不是抛错
+            _store.ListSessions().Should().BeEmpty();
+        }
+
+        // 释放句柄后严格读取应恢复成功（证明仅瞬时不可读）
+        _store.TryListSessions().Value.Should().ContainSingle().Which.SessionId.Should().Be(sessionId);
+    }
+
+    /// <summary>损坏文件在宽松模式下同样应跳过，不影响其他会话（保持既有行为不回归）。</summary>
+    [Fact]
+    public void ListSessions_ShouldNotBeBlocked_ByCorruptFile()
+    {
+        var valid = _store.BeginSession("FrameLab").Value!;
+        File.WriteAllText(Path.Combine(_rootDirectory, "garbage.json"), "nope");
+
+        var sessions = _store.ListSessions();
+
+        sessions.Should().ContainSingle().Which.SessionId.Should().Be(valid);
+    }
 }

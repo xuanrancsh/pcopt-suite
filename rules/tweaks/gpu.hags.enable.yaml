@@ -1,0 +1,16 @@
+id: gpu.hags.enable
+category: 游戏
+risk: Notice
+displayName: 开启硬件加速 GPU 调度
+description: 让显卡自己管理显存调度，部分支持的游戏能降低延迟、提升稳定性。
+consequenceHints:
+  - 需要重启后完全生效
+  - 极少数老驱动可能有兼容问题
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers
+    name: HwSchMode
+    value: 2
+    valueKind: DWord

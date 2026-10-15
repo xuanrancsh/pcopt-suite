@@ -1,0 +1,16 @@
+id: latency.mmcss.system.responsiveness.set
+category: 延迟
+risk: Notice
+displayName: 为多媒体任务保留更少的 CPU
+description: 降低系统为多媒体预留的 CPU 比例，把更多算力留给前台游戏。
+consequenceHints:
+  - 极端情况下音频/视频负载可能更依赖 CPU
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile
+    name: SystemResponsiveness
+    value: 10
+    valueKind: DWord

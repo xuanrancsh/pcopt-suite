@@ -1,0 +1,15 @@
+id: perf.dwm.transparency.disable
+category: 性能
+risk: Safe
+displayName: 关闭窗口透明效果
+description: 关闭开始菜单和任务栏的毛玻璃透明效果，降低桌面合成开销。
+consequenceHints:
+  - 视觉效果变朴素
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize
+    name: EnableTransparency
+    value: 0
+    valueKind: DWord

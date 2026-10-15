@@ -1,0 +1,16 @@
+id: privacy.location.deny
+category: 隐私
+risk: Notice
+displayName: 关闭系统位置访问
+description: 默认拒绝应用访问你的地理位置。
+consequenceHints:
+  - 地图/天气等依赖位置的应用会受影响
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location
+    name: Value
+    value: 0
+    valueKind: DWord

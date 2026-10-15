@@ -1,0 +1,17 @@
+id: privacy.defender.realtime.disable
+category: 隐私
+risk: Danger
+displayName: 关闭 Defender 实时保护
+description: 关闭 Windows Defender 的实时病毒防护。这会显著降低系统安全性，仅在明确知道自己在做什么时使用。
+consequenceHints:
+  - 电脑将失去实时杀毒防护
+  - 系统可能被恶意软件感染
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection
+    name: DisableRealtimeMonitoring
+    value: 1
+    valueKind: DWord

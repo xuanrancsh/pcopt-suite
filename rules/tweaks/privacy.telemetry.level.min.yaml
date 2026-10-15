@@ -1,0 +1,16 @@
+id: privacy.telemetry.level.min
+category: 隐私
+risk: Notice
+displayName: 把诊断数据调到最低
+description: 把 Windows 向微软发送的诊断数据级别调到最低，减少后台上报。
+consequenceHints:
+  - 不影响系统更新与安全补丁
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection
+    name: AllowTelemetry
+    value: 0
+    valueKind: DWord

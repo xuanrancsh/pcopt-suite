@@ -1,0 +1,16 @@
+id: privacy.cortana.disable
+category: 隐私
+risk: Notice
+displayName: 关闭小娜语音助手
+description: 关闭 Cortana 的后台与语音数据收集。
+consequenceHints:
+  - 将无法使用 Cortana
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search
+    name: AllowCortana
+    value: 0
+    valueKind: DWord

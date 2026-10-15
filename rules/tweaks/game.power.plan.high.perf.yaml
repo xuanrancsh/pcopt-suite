@@ -1,0 +1,14 @@
+id: game.power.plan.high.perf
+category: 游戏
+risk: Notice
+displayName: 切换到高性能电源计划
+description: 让 CPU 在游戏时更少降频。笔记本电量消耗会快一些。
+consequenceHints:
+  - 笔记本续航会短一些
+  - 退出后会自动切回原来的电源计划
+conditions:
+  - minBuild: 19041
+actions:
+  - type: PowerCfg
+    kind: SetActive
+    argument: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c

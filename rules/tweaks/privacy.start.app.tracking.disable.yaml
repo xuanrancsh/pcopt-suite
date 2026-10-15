@@ -1,0 +1,15 @@
+id: privacy.start.app.tracking.disable
+category: 隐私
+risk: Safe
+displayName: 关闭开始菜单的应用跟踪
+description: 不再根据你常用的应用调整开始菜单推荐。
+consequenceHints:
+  - 开始菜单不再显示"常用应用"
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+    name: Start_TrackProgs
+    value: 0
+    valueKind: DWord

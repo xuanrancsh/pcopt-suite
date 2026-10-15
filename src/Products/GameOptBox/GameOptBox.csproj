@@ -14,10 +14,18 @@
     <PackageReference Include="WPF-UI" Version="4.0.2" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\PcOpt.UI\PcOpt.UI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 签名规则包与公钥随包发布，启动验签加载（架构 3.5 / PRD B-P0-2） -->
+    <None Include="..\..\..\rules\public.key" Link="rules\public.key" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\..\rules\tweaks\*.yaml" Link="rules\tweaks\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\..\rules\tweaks\*.sig" Link="rules\tweaks\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

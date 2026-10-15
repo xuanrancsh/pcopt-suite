@@ -1,0 +1,16 @@
+id: perf.faststartup.disable
+category: 性能
+risk: Notice
+displayName: 关闭快速启动
+description: 让每次关机都彻底关闭内核会话，避免长期使用后的小毛病累积，也方便双系统/进 BIOS。
+consequenceHints:
+  - 开机会比"快速启动"稍慢一点点
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power
+    name: HiberbootEnabled
+    value: 0
+    valueKind: DWord

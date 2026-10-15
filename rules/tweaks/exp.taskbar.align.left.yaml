@@ -1,0 +1,15 @@
+id: exp.taskbar.align.left
+category: 体验
+risk: Safe
+displayName: 任务栏图标靠左对齐
+description: 把 Windows 11 任务栏图标从"居中"改为"靠左"，更接近经典 Windows 习惯。
+consequenceHints:
+  - 仅影响图标位置
+conditions:
+  - minBuild: 22000
+actions:
+  - type: RegistrySet
+    path: HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+    name: TaskbarAl
+    value: 0
+    valueKind: DWord

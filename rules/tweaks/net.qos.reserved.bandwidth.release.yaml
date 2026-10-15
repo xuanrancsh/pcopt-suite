@@ -1,0 +1,16 @@
+id: net.qos.reserved.bandwidth.release
+category: 网络
+risk: Notice
+displayName: 释放被预留的带宽
+description: 不再为系统 QoS 预留一部分带宽，把它让给游戏和下载。
+consequenceHints:
+  - 组策略型 QoS 应用可能受影响
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SOFTWARE\Policies\Microsoft\Windows\Psched
+    name: NonBestEffortLimit
+    value: 0
+    valueKind: DWord

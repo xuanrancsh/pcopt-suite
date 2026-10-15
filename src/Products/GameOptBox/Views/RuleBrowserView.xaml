@@ -1,0 +1,57 @@
+<UserControl x:Class="PcOpt.Products.GameOptBox.Views.RuleBrowserView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PcOpt.UI.Controls;assembly=PcOpt.UI"
+             Background="Transparent">
+  <Grid Margin="24">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <TextBlock Text="系统优化 · 调整项" FontSize="{DynamicResource PcOpt.Font.Size.Headline}" FontWeight="SemiBold" />
+
+    <Grid Grid.Row="1" Margin="0,12,0,12">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="160" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+               Padding="10,6" VerticalContentAlignment="Center"
+               ToolTip="输入关键词搜索调整项（按名称 / 说明 / 分类）" />
+      <ComboBox Grid.Column="1" Margin="10,0,0,0"
+                ItemsSource="{Binding Categories}"
+                SelectedItem="{Binding SelectedCategory}" />
+      <CheckBox Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Center"
+                Content="显示敏感项（危险）"
+                IsChecked="{Binding ShowSensitive}" />
+    </Grid>
+
+    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+      <StackPanel>
+        <TextBlock Text="{Binding SearchSummary}" Foreground="{DynamicResource PcOpt.Brush.TextSecondary}"
+                   FontSize="{DynamicResource PcOpt.Font.Size.Caption}" Margin="0,0,0,8" />
+        <ItemsControl ItemsSource="{Binding Items}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <controls:TweakCard Width="440" Margin="0,0,12,12"
+                                  Title="{Binding Title}"
+                                  Description="{Binding Description}"
+                                  Risk="{Binding Risk}"
+                                  IsApplied="{Binding IsApplied}"
+                                  ApplyCommand="{Binding ApplyCommand}"
+                                  RevertCommand="{Binding RevertCommand}" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

@@ -1,0 +1,15 @@
+id: exp.taskbar.search.box.hide
+category: 体验
+risk: Safe
+displayName: 隐藏任务栏搜索框
+description: 把任务栏搜索框收起来，让任务栏更清爽。
+consequenceHints:
+  - 仍可用 Win 键直接打字搜索
+conditions:
+  - minBuild: 22000
+actions:
+  - type: RegistrySet
+    path: HKCU\Software\Microsoft\Windows\CurrentVersion\Search
+    name: SearchboxTaskbarMode
+    value: 0
+    valueKind: DWord

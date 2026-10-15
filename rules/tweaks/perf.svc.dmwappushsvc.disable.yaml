@@ -1,0 +1,13 @@
+id: perf.svc.dmwappushsvc.disable
+category: 性能
+risk: Safe
+displayName: 关闭推送通知路由服务
+description: 关闭用于手机-电脑消息路由的推送服务，游戏机台基本用不到。
+consequenceHints:
+  - 手机通知镜像到电脑的功能会失效
+conditions:
+  - minBuild: 19041
+actions:
+  - type: ServiceStartType
+    serviceName: dmwappushservice
+    target: Disabled

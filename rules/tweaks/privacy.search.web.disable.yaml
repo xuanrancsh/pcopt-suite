@@ -1,0 +1,15 @@
+id: privacy.search.web.disable
+category: 隐私
+risk: Safe
+displayName: 关闭开始菜单的联网搜索
+description: 在开始菜单搜索时不再向你推送网络搜索结果。
+consequenceHints:
+  - 搜索仅返回本机结果
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Software\Microsoft\Windows\CurrentVersion\Search
+    name: BingSearchEnabled
+    value: 0
+    valueKind: DWord

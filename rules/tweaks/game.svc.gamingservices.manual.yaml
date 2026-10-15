@@ -1,0 +1,13 @@
+id: game.svc.gamingservices.manual
+category: 游戏
+risk: Safe
+displayName: 让游戏服务改为按需启动
+description: GamingServices 仅在用到 Xbox 生态功能时需要，平时可不必常驻。
+consequenceHints:
+  - 使用 Xbox 相关功能时会自动拉起
+conditions:
+  - minBuild: 19041
+actions:
+  - type: ServiceStartType
+    serviceName: GamingServices
+    target: Manual

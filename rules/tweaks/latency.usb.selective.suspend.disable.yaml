@@ -1,0 +1,16 @@
+id: latency.usb.selective.suspend.disable
+category: 延迟
+risk: Notice
+displayName: 关闭 USB 选择性暂停
+description: 避免空闲 USB 设备被系统挂起，减少键鼠/耳机唤醒时的微延迟。
+consequenceHints:
+  - 笔记本续航可能略有缩短
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Services\USB
+    name: DisableSelectiveSuspend
+    value: 1
+    valueKind: DWord

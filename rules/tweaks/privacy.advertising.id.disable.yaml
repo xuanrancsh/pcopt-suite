@@ -1,0 +1,15 @@
+id: privacy.advertising.id.disable
+category: 隐私
+risk: Safe
+displayName: 关闭广告 ID
+description: 关闭用于个性化广告投放的广告标识符。
+consequenceHints:
+  - 应用内广告相关性会降低
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo
+    name: Enabled
+    value: 0
+    valueKind: DWord

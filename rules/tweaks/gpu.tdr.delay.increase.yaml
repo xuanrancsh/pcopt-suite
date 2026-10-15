@@ -1,0 +1,16 @@
+id: gpu.tdr.delay.increase
+category: 游戏
+risk: Notice
+displayName: 延长显卡超时恢复等待
+description: 给显卡驱动更多响应时间，减少重负载/超频场景下的"驱动已停止响应"黑屏崩溃。
+consequenceHints:
+  - 出现真正的显卡故障时，恢复画面会晚一些
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers
+    name: TdrDelay
+    value: 10
+    valueKind: DWord

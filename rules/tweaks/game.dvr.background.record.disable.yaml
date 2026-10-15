@@ -1,0 +1,16 @@
+id: game.dvr.background.record.disable
+category: 游戏
+risk: Notice
+displayName: 关闭后台录制
+description: 关闭 Xbox DVR 的后台持续录制，避免它占用显卡编码器拖慢游戏。
+consequenceHints:
+  - 将无法用 Win+G 回放最近 30 秒
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\System\GameConfigStore
+    name: GameDVR_Enabled
+    value: 0
+    valueKind: DWord

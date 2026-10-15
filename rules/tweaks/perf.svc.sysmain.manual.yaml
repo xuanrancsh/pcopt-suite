@@ -1,0 +1,14 @@
+id: perf.svc.sysmain.manual
+category: 性能
+risk: Notice
+displayName: 让预读取服务改为按需启动
+description: 把 SysMain（旧名 Superfetch）从自动启动改为手动，减少机械硬盘时代的后台磁盘读写。
+consequenceHints:
+  - 若使用老式机械硬盘，程序首次打开可能稍慢
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: ServiceStartType
+    serviceName: SysMain
+    target: Manual

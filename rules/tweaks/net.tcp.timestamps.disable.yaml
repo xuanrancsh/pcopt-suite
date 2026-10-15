@@ -1,0 +1,15 @@
+id: net.tcp.timestamps.disable
+category: 网络
+risk: Safe
+displayName: 关闭 TCP 时间戳选项
+description: 去掉 TCP 时间戳带来的额外包头开销，部分线路上能略微降低延迟。
+consequenceHints:
+  - 对绝大多数日常使用无影响
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters
+    name: Tcp1323Opts
+    value: 0
+    valueKind: DWord

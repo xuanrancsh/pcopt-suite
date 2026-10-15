@@ -1,0 +1,13 @@
+id: net.svc.sharedaccess.manual
+category: 网络
+risk: Safe
+displayName: 让 Internet 连接共享改为按需启动
+description: 不共享网络时无需让该服务常驻。
+consequenceHints:
+  - 需要开启热点/共享时系统会自动拉起
+conditions:
+  - minBuild: 19041
+actions:
+  - type: ServiceStartType
+    serviceName: SharedAccess
+    target: Manual

@@ -1,0 +1,15 @@
+id: net.responder.disable
+category: 网络
+risk: Safe
+displayName: 关闭网络响应器服务
+description: 关闭 Responder 服务，减少局域网内不必要的应答活动。
+consequenceHints:
+  - 家庭组/网络发现相关功能可能不可用
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Services\rspndr
+    name: Start
+    value: 4
+    valueKind: DWord

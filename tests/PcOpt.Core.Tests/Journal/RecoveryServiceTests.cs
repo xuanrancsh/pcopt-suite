@@ -139,4 +139,24 @@ public sealed class RecoveryServiceTests : IDisposable
         report.Value!.SessionsRecovered.Should().Be(2);
         _restorer.RestoredEntries.Select(e => e.RuleId).Should().Equal("rule.older.action", "rule.newer.action");
     }
+
+    /// <summary>
+    /// 缺陷 E 回归证明：还原日志瞬时段不到时，开机恢复必须显式失败，
+    /// 绝不能把"读不到"当成"没有待恢复会话"而静默报告完成（内核可还原承诺）。
+    /// </summary>
+    [Fact]
+    public void RecoverOpenSessions_WhenJournalUnreadable_ShouldFail_NotReportDone()
+    {
+        var sessionId = _store.BeginSession("GameModePilot").Value!;
+        _store.AppendEntry(sessionId, new JournalEntry("svc.sysmain.disable", 0, "{}", DateTime.UtcNow));
+
+        using (new FileStream(_store.GetSessionPath(sessionId), FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            var report = _service.RecoverOpenSessions();
+
+            report.IsSuccess.Should().BeFalse("读不到还原日志时绝不能静默报告恢复完成");
+            report.Error.Should().Contain("还原日志");
+            _restorer.RestoredEntries.Should().BeEmpty();
+        }
+    }
 }

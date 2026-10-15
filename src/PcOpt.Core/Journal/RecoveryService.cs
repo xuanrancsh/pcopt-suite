@@ -46,7 +46,16 @@ public sealed class RecoveryService
     /// </summary>
     public Result<RecoveryReport> RecoverOpenSessions()
     {
-        var openSessions = _journalStore.ListSessions()
+        // 关键路径：读还原日志失败必须显式失败——绝不把"读不到"当成"没有待恢复会话"而静默成功，
+        // 那会让崩溃 / 断电后的系统"什么都没恢复"却报告已恢复（内核可还原承诺）。
+        var sessionsResult = _journalStore.TryListSessions();
+        if (!sessionsResult.IsSuccess)
+        {
+            _logger.LogError("开机恢复：读取还原日志失败：{Error}", sessionsResult.Error);
+            return Result<RecoveryReport>.Fail($"无法读取还原日志，已中止恢复（下次启动重试）：{sessionsResult.Error}");
+        }
+
+        var openSessions = sessionsResult.Value!
             .Where(s => s.Status == JournalStatus.Open)
             .OrderBy(s => s.StartedAt)
             .ToList();

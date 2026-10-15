@@ -1,0 +1,14 @@
+id: privacy.schtask.compatibility.telemetry.disable
+category: 隐私
+risk: Notice
+displayName: 关闭兼容性遥测计划任务
+description: 关掉定期收集应用兼容性数据的"Microsoft Compatibility Appraiser"计划任务。
+consequenceHints:
+  - 不影响系统更新
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: ScheduledTask
+    taskPath: \Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser
+    enable: false

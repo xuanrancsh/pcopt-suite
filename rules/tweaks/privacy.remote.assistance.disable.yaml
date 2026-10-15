@@ -1,0 +1,16 @@
+id: privacy.remote.assistance.disable
+category: 隐私
+risk: Notice
+displayName: 关闭远程协助
+description: 拒绝他人发起"邀请你进行远程协助"，降低社工风险。
+consequenceHints:
+  - 需要远程求助时需手动重新开启
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Control\Remote Assistance
+    name: fAllowToGetHelp
+    value: 0
+    valueKind: DWord

@@ -1,0 +1,15 @@
+id: latency.mouse.acceleration.disable
+category: 延迟
+risk: Safe
+displayName: 关闭鼠标加速
+description: 让鼠标移动和屏幕指针 1:1 对应，甩枪更可预测（职业选手常用）。
+consequenceHints:
+  - 需要几天适应期
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Control Panel\Mouse
+    name: MouseSpeed
+    value: "0"
+    valueKind: String

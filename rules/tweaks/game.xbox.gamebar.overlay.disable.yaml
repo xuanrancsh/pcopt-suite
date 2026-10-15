@@ -1,0 +1,16 @@
+id: game.xbox.gamebar.overlay.disable
+category: 游戏
+risk: Notice
+displayName: 关闭 Xbox Game Bar 叠加层
+description: 关闭 Win+G 游戏栏的屏幕叠加层，避免它抢游戏画面与快捷键。
+consequenceHints:
+  - 将无法用 Win+G 录屏或截图
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Software\Microsoft\GameBar
+    name: UseNexusForGameBarEnabled
+    value: 0
+    valueKind: DWord

@@ -1,0 +1,16 @@
+id: latency.dwm.mpo.disable
+category: 延迟
+risk: Notice
+displayName: 修复多平面叠加（MPO）导致的卡顿
+description: 关闭 DWM 多平面叠加，修复部分显卡驱动下桌面/游戏无规律的闪屏与掉帧。
+consequenceHints:
+  - 极少数场景下窗口合成方式改变
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SOFTWARE\Microsoft\Windows\Dwm
+    name: OverlayTestMode
+    value: 5
+    valueKind: DWord

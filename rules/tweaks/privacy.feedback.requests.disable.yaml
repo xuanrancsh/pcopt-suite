@@ -1,0 +1,15 @@
+id: privacy.feedback.requests.disable
+category: 隐私
+risk: Safe
+displayName: 关闭系统反馈提示
+description: 不再弹出"你觉得 Windows 怎么样"之类的反馈邀请。
+consequenceHints:
+  - 无
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Software\Microsoft\Siuf\Rules
+    name: NumberOfSIUFInPeriod
+    value: 0
+    valueKind: DWord

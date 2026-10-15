@@ -1,0 +1,16 @@
+id: net.smb1.disable
+category: 网络
+risk: Safe
+displayName: 关闭过时的 SMBv1 协议
+description: 关闭 30 年前的 SMBv1，减少被蠕虫类漏洞利用的风险，也减少协商开销。
+consequenceHints:
+  - 极老式的网络打印机/共享可能不兼容
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters
+    name: SMB1
+    value: 0
+    valueKind: DWord

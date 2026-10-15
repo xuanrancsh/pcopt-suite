@@ -1,0 +1,15 @@
+id: perf.menu.showdelay.reduce
+category: 性能
+risk: Safe
+displayName: 加快菜单弹出速度
+description: 去掉菜单弹出的等待延迟，点击右键/开始菜单时响应更快。
+consequenceHints:
+  - 菜单会瞬间出现，没有淡入动画
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Control Panel\Desktop
+    name: MenuShowDelay
+    value: "0"
+    valueKind: String

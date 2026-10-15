@@ -1,0 +1,15 @@
+id: exp.explorer.show.fileext
+category: 体验
+risk: Safe
+displayName: 显示文件扩展名
+description: 让文件资源管理器始终显示 .exe/.txt 等扩展名，避免把可执行文件误当文档打开。
+consequenceHints:
+  - 文件名后缀会一直显示
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+    name: HideFileExt
+    value: 0
+    valueKind: DWord

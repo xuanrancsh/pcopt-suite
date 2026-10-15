@@ -376,6 +376,74 @@ public sealed class TweakEngineTests : IDisposable
         apply.Error.Should().Contain("尚未加载");
     }
 
+    // ---------- 关键路径严格读取（缺陷 E） ----------
+
+    /// <summary>
+    /// 还原日志瞬时读不到时，还原必须显式失败，绝不报告"已还原（0 条）"。
+    /// </summary>
+    [Fact]
+    public void RevertRule_WhenJournalUnreadable_ShouldFail_NotReportSuccess()
+    {
+        var (engine, store, handler) = CreateEngine();
+        engine.RegisterRule(BuildRule());
+        var apply = engine.ApplyRule(RuleId, Product);
+        apply.IsSuccess.Should().BeTrue(apply.Error);
+        var sessionId = apply.Value!.SessionId!;
+
+        using (new FileStream(store.GetSessionPath(sessionId), FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            var revert = engine.RevertRule(RuleId, Product);
+
+            revert.IsSuccess.Should().BeFalse("读不到还原日志时绝不能误报已还原");
+            revert.Error.Should().Contain("还原日志");
+            handler.Calls.Count(c => c.Method == "Revert").Should().Be(0);
+        }
+    }
+
+    /// <summary>
+    /// 还原日志瞬时读不到时，幂等判定必须显式失败，绝不把"读不到"当作"未应用"而重复执行动作。
+    /// </summary>
+    [Fact]
+    public void ApplyRule_WhenJournalUnreadable_ShouldFail_NotReapply()
+    {
+        var (engine, store, handler) = CreateEngine();
+        engine.RegisterRule(BuildRule());
+        var apply = engine.ApplyRule(RuleId, Product);
+        apply.IsSuccess.Should().BeTrue(apply.Error);
+        var sessionId = apply.Value!.SessionId!;
+        var applyCallsAfterFirst = handler.Calls.Count(c => c.Method == "Apply");
+
+        using (new FileStream(store.GetSessionPath(sessionId), FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            var second = engine.ApplyRule(RuleId, Product);
+
+            second.IsSuccess.Should().BeFalse("读不到还原日志时绝不能误判为未应用而重复执行");
+            second.Error.Should().Contain("还原日志");
+            handler.Calls.Count(c => c.Method == "Apply").Should().Be(applyCallsAfterFirst);
+        }
+    }
+
+    /// <summary>严格列出未还原条目所属规则：读不到日志时显式失败，而非返回空集合。</summary>
+    [Fact]
+    public void ListOpenRuleIds_WhenJournalUnreadable_ShouldFail()
+    {
+        var (engine, store, _) = CreateEngine();
+        engine.RegisterRule(BuildRule());
+        var apply = engine.ApplyRule(RuleId, Product);
+        var sessionId = apply.Value!.SessionId!;
+
+        using (new FileStream(store.GetSessionPath(sessionId), FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            var openIds = engine.ListOpenRuleIds(Product);
+
+            openIds.IsSuccess.Should().BeFalse();
+            openIds.Error.Should().Contain("还原日志");
+        }
+
+        // 释放后可正常读取
+        engine.ListOpenRuleIds(Product).Value.Should().Contain(RuleId);
+    }
+
     // ---------- 辅助 ----------
 
     private static TweakRule BuildRule(string ruleId = RuleId, OsCondition[]? conditions = null, int actionCount = 2)

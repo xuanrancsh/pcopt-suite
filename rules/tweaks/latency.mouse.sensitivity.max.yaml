@@ -1,0 +1,15 @@
+id: latency.mouse.sensitivity.max
+category: 延迟
+risk: Safe
+displayName: 鼠标灵敏度设为最高档
+description: 去掉系统层面的指针分级放大，配合关闭加速获得线性手感。
+consequenceHints:
+  - 请以游戏内灵敏度为准
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Control Panel\Mouse
+    name: MouseSensitivity
+    value: "10"
+    valueKind: String

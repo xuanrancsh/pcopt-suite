@@ -1,0 +1,16 @@
+id: perf.hibernate.file.disable
+category: 性能
+risk: Notice
+displayName: 关闭休眠功能释放磁盘空间
+description: 关闭休眠（并把 hiberfil.sys 释放出来），台式机通常用不到休眠。
+consequenceHints:
+  - 将无法使用"休眠"和"快速启动"
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Control\Power
+    name: HibernateEnabled
+    value: 0
+    valueKind: DWord

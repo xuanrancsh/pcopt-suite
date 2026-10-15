@@ -174,8 +174,15 @@ public sealed class TweakEngine
             return Result<RuleApplyReport>.Fail($"规则“{ruleId}”不适用于当前系统环境（OS 版本 / CPU 架构 / GPU 厂商条件不满足）");
         }
 
-        // 幂等：Journal 中已有该产品、该规则的未还原条目 → 视为已应用（跨进程重启同样有效）
-        var existing = FindOpenEntries(ruleId, product);
+        // 幂等：Journal 中已有该产品、该规则的未还原条目 → 视为已应用（跨进程重启同样有效）。
+        // 关键路径：读还原日志失败必须显式失败，绝不把"读不到"当成"未应用"而重复执行。
+        var existingResult = TryFindOpenEntries(ruleId, product);
+        if (!existingResult.IsSuccess)
+        {
+            return Result<RuleApplyReport>.Fail($"无法读取还原日志，已终止应用以避免重复执行：{existingResult.Error}");
+        }
+
+        var existing = existingResult.Value!;
         if (existing.Count > 0)
         {
             _logger.LogInformation("规则 {RuleId} 已应用，跳过重复执行（幂等）", ruleId);
@@ -263,7 +270,15 @@ public sealed class TweakEngine
             return Result<RuleRevertReport>.Fail($"规则“{ruleId}”尚未加载到引擎");
         }
 
-        var openEntries = FindOpenEntries(ruleId, product);
+        // 关键路径：读还原日志失败必须显式失败——绝不静默返回"已全部还原（0 条）"，
+        // 那会让用户在什么都没还原的情况下看到"已全部还原"（缺陷 E）。
+        var openResult = TryFindOpenEntries(ruleId, product);
+        if (!openResult.IsSuccess)
+        {
+            return Result<RuleRevertReport>.Fail($"无法读取还原日志，已终止还原（避免误报“已还原”）：{openResult.Error}");
+        }
+
+        var openEntries = openResult.Value!;
         if (openEntries.Count == 0)
         {
             return Result<RuleRevertReport>.Ok(new RuleRevertReport(0, true));
@@ -341,8 +356,40 @@ public sealed class TweakEngine
 
     /// <summary>
     /// 查询规则当前是否已应用（以 Journal 未还原条目为准，跨进程重启有效）。
+    /// <para>展示 / 徽标等<b>非关键</b>查询：读还原日志失败时按"未应用"降级（宽松扫描）。
+    /// 还原判定请走 <see cref="RevertRule"/> / <see cref="ListOpenRuleIds"/>（严格读取）。</para>
     /// </summary>
-    public bool IsApplied(string ruleId, string product) => FindOpenEntries(ruleId, product).Count > 0;
+    public bool IsApplied(string ruleId, string product) =>
+        QueryOpenEntries(_journalStore.ListSessions(), ruleId, product).Count > 0;
+
+    /// <summary>
+    /// 严格列出指定产品名下所有"未还原条目"所属的规则 Id（去重）。
+    /// 用于"全部还原"等批量关键路径：读还原日志失败时显式上抛，
+    /// 绝不因读不到而漏还原并误报成功。
+    /// </summary>
+    /// <param name="product">产品名。</param>
+    public Result<IReadOnlyList<string>> ListOpenRuleIds(string product)
+    {
+        if (string.IsNullOrWhiteSpace(product))
+        {
+            return Result<IReadOnlyList<string>>.Fail("产品名不能为空");
+        }
+
+        var sessions = _journalStore.TryListSessions();
+        if (!sessions.IsSuccess)
+        {
+            return Result<IReadOnlyList<string>>.Fail(sessions.Error);
+        }
+
+        var ids = sessions.Value!
+            .Where(s => s.Status == JournalStatus.Open
+                && string.Equals(s.Product, product, StringComparison.OrdinalIgnoreCase))
+            .SelectMany(s => s.OpenEntries)
+            .Select(e => e.RuleId)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        return Result<IReadOnlyList<string>>.Ok(ids);
+    }
 
     /// <summary>
     /// 按单条还原日志条目还原动作（T13 接入 <c>IActionRestorer</c>：开机恢复服务负责 LIFO 顺序，
@@ -416,8 +463,27 @@ public sealed class TweakEngine
         return parsed.Value;
     }
 
-    private List<(JournalEntry Entry, string SessionId)> FindOpenEntries(string ruleId, string product) =>
-        _journalStore.ListSessions()
+    /// <summary>
+    /// 严格查询"该产品、该规则"的未还原条目：还原 / 幂等判定等关键路径使用。
+    /// 读还原日志失败（I/O）时返回失败，绝不把"读不到"当作"无待还原项"（内核可还原承诺）。
+    /// </summary>
+    private Result<List<(JournalEntry Entry, string SessionId)>> TryFindOpenEntries(string ruleId, string product)
+    {
+        var sessions = _journalStore.TryListSessions();
+        if (!sessions.IsSuccess)
+        {
+            return Result<List<(JournalEntry Entry, string SessionId)>>.Fail(sessions.Error);
+        }
+
+        return Result<List<(JournalEntry Entry, string SessionId)>>.Ok(QueryOpenEntries(sessions.Value!, ruleId, product));
+    }
+
+    /// <summary>从给定会话集合筛选"该产品、该规则"的未还原条目（纯函数，供宽松 / 严格路径共用）。</summary>
+    private static List<(JournalEntry Entry, string SessionId)> QueryOpenEntries(
+        IReadOnlyList<RestoreJournal> sessions,
+        string ruleId,
+        string product) =>
+        sessions
             .Where(s => s.Status == JournalStatus.Open
                 && string.Equals(s.Product, product, StringComparison.OrdinalIgnoreCase))
             .SelectMany(s => s.OpenEntries.Select(e => (Entry: e, SessionId: s.SessionId)))

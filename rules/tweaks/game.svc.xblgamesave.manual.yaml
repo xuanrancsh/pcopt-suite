@@ -1,0 +1,13 @@
+id: game.svc.xblgamesave.manual
+category: 游戏
+risk: Safe
+displayName: 让 Xbox 存档服务改为按需启动
+description: 不玩支持 Xbox 存档的游戏时，这项服务无需常驻。
+consequenceHints:
+  - 若玩 Xbox 商店游戏，系统会自动拉起该服务
+conditions:
+  - minBuild: 19041
+actions:
+  - type: ServiceStartType
+    serviceName: XblGameSave
+    target: Manual

@@ -1,0 +1,16 @@
+id: latency.ntfs.lastaccess.disable
+category: 延迟
+risk: Notice
+displayName: 关闭文件"最后访问时间"更新
+description: 读写文件时不再回写访问时间，减少后台磁盘写入。
+consequenceHints:
+  - 依赖"最后访问时间"的备份工具可能受影响
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Control\FileSystem
+    name: NtfsDisableLastAccessUpdate
+    value: 1
+    valueKind: DWord

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>PcOpt.Tools.RuleSigner</RootNamespace>
+    <AssemblyName>PcOpt.RuleSigner</AssemblyName>
+    <Description>开发用规则包签名工具：为 rules/tweaks/*.yaml 生成 Ed25519 分离签名（*.sig）。不参与产品发布，不内嵌私钥。</Description>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 与 PcOpt.Core 使用同一 Ed25519 实现（RFC 8032，见 NOTICE） -->
+    <PackageReference Include="NSec.Cryptography" Version="26.4.0" />
+  </ItemGroup>
+
+</Project>

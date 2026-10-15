@@ -1,0 +1,15 @@
+id: perf.window.animate.disable
+category: 性能
+risk: Safe
+displayName: 关闭窗口缩放动画
+description: 最小化/还原窗口时不再播放缩放动画，切换更利落，低配机器尤其明显。
+consequenceHints:
+  - 窗口切换少了动效
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Control Panel\Desktop\WindowMetrics
+    name: MinAnimate
+    value: "0"
+    valueKind: String

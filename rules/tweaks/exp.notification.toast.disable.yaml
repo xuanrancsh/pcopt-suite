@@ -1,0 +1,16 @@
+id: exp.notification.toast.disable
+category: 体验
+risk: Notice
+displayName: 关闭通知横幅弹窗
+description: 保留通知中心记录，但不再弹出打扰游戏的横幅。
+consequenceHints:
+  - 不会再有右下角弹窗提醒
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Software\Microsoft\Windows\CurrentVersion\PushNotifications
+    name: ToastEnabled
+    value: 0
+    valueKind: DWord

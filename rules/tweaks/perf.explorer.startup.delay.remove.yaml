@@ -1,0 +1,15 @@
+id: perf.explorer.startup.delay.remove
+category: 性能
+risk: Notice
+displayName: 去掉资源管理器的启动刻意延迟
+description: 打开文件资源管理器时不再刻意等待，窗口出现更快。
+consequenceHints:
+  - 极端情况下若某个右键扩展很慢，资源管理器可能短暂停顿
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Serialize
+    name: StartupDelayInMSec
+    value: 0
+    valueKind: DWord

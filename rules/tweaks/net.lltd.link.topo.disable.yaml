@@ -1,0 +1,15 @@
+id: net.lltd.link.topo.disable
+category: 网络
+risk: Safe
+displayName: 关闭链路层拓扑发现
+description: 关闭用于画网络拓扑图的发现服务，家用游戏机台用不到。
+consequenceHints:
+  - 关闭后网络拓扑图类功能可能失效
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Services\lltdio
+    name: Start
+    value: 4
+    valueKind: DWord

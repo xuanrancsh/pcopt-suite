@@ -1,0 +1,16 @@
+id: net.teredo.disable
+category: 网络
+risk: Notice
+displayName: 关闭 Teredo 隧道
+description: 关闭 IPv6 过渡隧道，减少无用的 IPv6 探测与潜在延迟。
+consequenceHints:
+  - 依赖 Teredo 的个别 P2P/联机场景可能受影响
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters
+    name: DisabledComponents
+    value: 1
+    valueKind: DWord

@@ -1,0 +1,17 @@
+id: net.windowsupdate.auto.disable
+category: 网络
+risk: Danger
+displayName: 暂停 Windows 自动更新
+description: 关闭 Windows 自动更新（含驱动更新）。长期不更新会缺少安全补丁，请谨慎使用，用完建议还原。
+consequenceHints:
+  - 系统将不再自动安装安全更新
+  - 可能错过关键漏洞修复
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU
+    name: NoAutoUpdate
+    value: 1
+    valueKind: DWord

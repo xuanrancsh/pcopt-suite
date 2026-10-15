@@ -1,0 +1,16 @@
+id: privacy.smartscreen.disable
+category: 隐私
+risk: Danger
+displayName: 关闭 SmartScreen 应用检查
+description: 关闭 SmartScreen 对下载/运行程序的信誉检查。会降低拦截恶意软件的能力。
+consequenceHints:
+  - 下载的可疑程序不再被拦截提示
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SOFTWARE\Policies\Microsoft\Windows\System
+    name: EnableSmartScreen
+    value: 0
+    valueKind: DWord

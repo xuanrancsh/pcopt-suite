@@ -1,0 +1,14 @@
+id: perf.svc.diagtrack.disable
+category: 性能
+risk: Notice
+displayName: 关闭使用体验跟踪服务
+description: 关闭微软的使用数据收集服务（Connected User Experiences and Telemetry），减少后台活动。
+consequenceHints:
+  - 不影响系统更新与安全
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: ServiceStartType
+    serviceName: DiagTrack
+    target: Disabled

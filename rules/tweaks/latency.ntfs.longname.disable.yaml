@@ -1,0 +1,16 @@
+id: latency.ntfs.longname.disable
+category: 延迟
+risk: Notice
+displayName: 关闭 NTFS 8.3 短文件名
+description: 不再为每个新文件生成 8.3 兼容短名，减少磁盘写入开销。
+consequenceHints:
+  - 个别很老的软件可能不兼容
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Control\FileSystem
+    name: NtfsDisable8dot3NameCreation
+    value: 1
+    valueKind: DWord

@@ -1,0 +1,13 @@
+id: latency.timer.resolution.set
+category: 延迟
+risk: Notice
+displayName: 提高系统计时器精度
+description: 把计时器精度调到 0.5 毫秒，鼠标与画面更跟手。
+consequenceHints:
+  - 个别老程序对高精度计时器敏感
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: TimerResolution
+    desiredResolution100Ns: 5000

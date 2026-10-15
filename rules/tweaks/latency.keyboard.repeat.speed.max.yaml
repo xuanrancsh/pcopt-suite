@@ -1,0 +1,15 @@
+id: latency.keyboard.repeat.speed.max
+category: 延迟
+risk: Safe
+displayName: 提高键盘重复速度
+description: 把按住按键后的重复速度调到最快。
+consequenceHints:
+  - 打字重复速度变快
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKCU\Control Panel\Keyboard
+    name: KeyboardSpeed
+    value: "31"
+    valueKind: String

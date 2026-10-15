@@ -1,0 +1,16 @@
+id: perf.power.throttling.disable
+category: 性能
+risk: Notice
+displayName: 关闭后台程序省电节流
+description: 让正在用的程序一直保持完整的 CPU 调度，减少后台省电带来的轻微卡顿。笔记本会更费一点电。
+consequenceHints:
+  - 笔记本续航可能略有缩短
+  - 退出后会自动还原
+conditions:
+  - minBuild: 19041
+actions:
+  - type: RegistrySet
+    path: HKLM\SYSTEM\CurrentControlSet\Control\Power
+    name: PowerThrottlingOff
+    value: 1
+    valueKind: DWord
