@@ -13,7 +13,7 @@ namespace PcOpt.Products.GameOptBox.Services;
 public sealed class UpdateChecker
 {
     /// <summary>GitHub Releases 最新版本接口。</summary>
-    public const string ReleasesApiUrl = "https://api.github.com/repos/pcopt-suite/pcopt-suite/releases/latest";
+    public const string ReleasesApiUrl = "https://api.github.com/repos/xuanrancsh/pcopt-suite/releases/latest";
 
     private static readonly HttpClient HttpClient = CreateHttpClient();
 

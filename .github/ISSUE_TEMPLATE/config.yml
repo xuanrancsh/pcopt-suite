@@ -3,11 +3,11 @@
 blank_issues_enabled: false
 contact_links:
   - name: 💬 使用问题 / 优化心得 / 硬件兼容（Discussions）
-    url: https://github.com/pcopt-suite/pcopt-suite/discussions
+    url: https://github.com/xuanrancsh/pcopt-suite/discussions
     about: 不确定是不是 Bug？想交流？请到 Discussions。
   - name: 🔒 报告安全漏洞（请勿公开 Issue）
-    url: https://github.com/pcopt-suite/pcopt-suite/security/advisories/new
+    url: https://github.com/xuanrancsh/pcopt-suite/security/advisories/new
     about: 安全漏洞请通过 Private Vulnerability Reporting 私下上报，详见 SECURITY.md。
   - name: 📖 阅读文档
-    url: https://github.com/pcopt-suite/pcopt-suite/blob/main/README.md
+    url: https://github.com/xuanrancsh/pcopt-suite/blob/main/README.md
     about: 构建、运行、系统要求与免责声明。

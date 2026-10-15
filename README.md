@@ -2,7 +2,7 @@
 
 > **先测量、再优化、可还原**：一个开源、可审计的 Windows 游戏优化套件，包含"自动调度 + 手动工具箱 + 帧时间诊断"三款互补产品，共享同一套内核与还原机制。
 
-[![CI](https://github.com/pcopt-suite/pcopt-suite/actions/workflows/ci.yml/badge.svg)](https://github.com/pcopt-suite/pcopt-suite/actions/workflows/ci.yml)
+[![CI](https://github.com/xuanrancsh/pcopt-suite/actions/workflows/ci.yml/badge.svg)](https://github.com/xuanrancsh/pcopt-suite/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D6)
 ![.NET](https://img.shields.io/badge/.NET-9.0-512BD4)

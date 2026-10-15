@@ -23,7 +23,8 @@ pcopt-suite 是一款**系统级**Windows 优化工具：它会在用户（通�
 
 **首选**：通过 GitHub **Private Vulnerability Reporting / Security Advisory** 提交
 （仓库 `Security` 选项卡 → *Report a vulnerability*）。
-**备选**：邮件至 `security@pcopt-suite.example`（占位地址，正式发布前替换为真实安全邮箱）。
+**备选**：通过仓库主页维护者的公开联系方式取得私下沟通渠道
+（请勿在公开渠道附带任何漏洞细节）。
 
 请在报告中尽量包含：
 

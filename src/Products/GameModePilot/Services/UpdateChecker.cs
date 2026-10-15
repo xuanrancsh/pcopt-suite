@@ -13,7 +13,7 @@ namespace PcOpt.Products.GameModePilot.Services;
 /// </summary>
 public sealed class UpdateChecker
 {
-    private const string ReleasesApiUrl = "https://api.github.com/repos/pcopt-suite/pcopt-suite/releases/latest";
+    private const string ReleasesApiUrl = "https://api.github.com/repos/xuanrancsh/pcopt-suite/releases/latest";
 
     private readonly HttpClient _httpClient;
     private readonly ILogger<UpdateChecker> _logger;
