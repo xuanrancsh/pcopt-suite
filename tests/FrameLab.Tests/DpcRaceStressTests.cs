@@ -14,14 +14,19 @@ namespace PcOpt.Products.FrameLab.Tests;
 /// + 有界等待 2s 收尾。
 /// </para>
 /// <para>
-/// <b>CI 稳健化原则（T38）</b>：断言只依赖"委托是否被执行"这一与机器调度速度无关的事实，
-/// 绝不依赖"委托能否在某个墙钟窗口内被调度"。原先断言"DPC 恒不为空"在 2 核慢速 CI 上会因
-/// 线程池调度延迟（> 2s 有界等待）而偶发失败——那是环境调度，不是残留竞态：
+/// <b>CI 稳健化原则（T38 初版 → T40 修正）</b>：断言只依赖<b>与线程池调度速度无关</b>的事实。
+/// 关键教训：<c>task.Wait(timeout)</c> 只会阻塞调用线程，<b>不会</b>帮助已入队的委托拿到线程池线程；
+/// 在 2 vCPU / <c>DOTNET_PROCESSOR_COUNT=1</c> 且线程池被同进程其它测试占满时，委托可能在有界等待
+/// 窗口内<b>根本未被调度</b>。故任何"委托必须已被及时调度/执行"的<b>即时</b>断言都是脆弱不变量，必须删除；
+/// 一切需要调度的事件一律改成<b>宽裕上限轮询</b>或<b>不可释放门控</b>：
 /// <list type="bullet">
-///   <item>竞态守护：<c>PartialDpcSampler_InstantCapture_DelegateAlwaysInvoked</c> —— 在宽裕上限内
-///     轮询等待全部委托确实被执行；旧竞态下委托会被丢弃 → 计数不足 → 失败。</item>
-///   <item>时序无关的"不丢弃"证明：<c>RealSampler_WithinWindow_DpcNeverEmpty</c> —— 用<b>可控同步点</b>
-///     保证真实采样委托已在采集窗口内开始执行，再断言其统计被完整保留（确定通过，无墙钟依赖）。</item>
+///   <item>竞态守护：<c>PartialDpcSampler_InstantCapture_DelegateAlwaysInvoked</c> —— 瞬时采集后
+///     在<b>宽裕上限（60s）内轮询</b>等待全部委托被执行；旧竞态（令牌透传 Task.Run）下委托被取消而
+///     永不执行 → 计数不足 → 失败（已用临时构造缺陷验证，随后 100% 回退）。</item>
+///   <item>时序无关的"不丢弃"证明：<c>RealSampler_WithinWindow_DpcNeverEmpty</c> —— 用<b>不可释放、
+///     宽裕上限</b>的门控同步点，保证真实采样委托已在采集窗口内开始执行，再断言其统计被完整保留。</item>
+///   <item>有界等待退空：<c>SlowIgnoringSampler_BoundedWait_…</c> —— 门控保证慢采样器不可能在窗口内完成，
+///     断言仅保留调度无关量（采集已返回、未等待其结束、退化为空统计、有界耗时）。</item>
 /// </list>
 /// </para>
 /// </summary>
@@ -70,27 +75,29 @@ public sealed class DpcRaceStressTests
     }
 
     /// <summary>
-    /// 门控采集替身：先<b>等待 DPC 采样委托确实开始执行</b>（有界上限，避免永久阻塞），
-    /// 再让采集结束。用于在"采集窗口内"确定性地验证 DPC 统计不被丢弃，且不依赖机器调度速度。
+    /// 门控采集替身：先<b>等待 DPC 采样委托确实开始执行</b>（宽裕上限，避免永久阻塞），
+    /// 再让采集结束。用于在"采集窗口内"确定性地验证 DPC 统计不被丢弃。
     /// </summary>
     private sealed class GatedRunner : IPresentMonRunner
     {
         private readonly ManualResetEventSlim _samplerStarted;
         private readonly int _lingerMs;
+        private readonly TimeSpan _startWait;
         private readonly IReadOnlyList<FrameSample> _samples = MakeSamples();
 
-        public GatedRunner(ManualResetEventSlim samplerStarted, int lingerMs)
+        public GatedRunner(ManualResetEventSlim samplerStarted, int lingerMs, TimeSpan startWait)
         {
             _samplerStarted = samplerStarted;
             _lingerMs = lingerMs;
+            _startWait = startWait;
         }
 
         public PresentMonAvailability Locate() => new(true, @"C:\fake\PresentMon.exe", "可用");
 
         public Result<PresentMonCaptureResult> Capture(PresentMonOptions options, IProgress<FrameSample>? progress, CancellationToken cancellationToken)
         {
-            // 与调度速度无关：只要委托被执行，此处必然被放行；仅在极端异常时才超时。
-            _samplerStarted.Wait(TimeSpan.FromSeconds(20));
+            // 宽裕上限轮询：只要委托被执行，此处必然被放行；仅在线程池被长时间饥饿时才超时。
+            _samplerStarted.Wait(_startWait);
             if (_lingerMs > 0)
             {
                 Thread.Sleep(_lingerMs); // 让采样器累积至少一个样本
@@ -171,31 +178,45 @@ public sealed class DpcRaceStressTests
     }
 
     /// <summary>
-    /// 门控慢采样器：进入后阻塞在测试握手上（无视取消），直到测试在 <c>RunCapture</c> 返回后放行。
+    /// 门控慢采样器：进入后阻塞（无视取消），直到测试在 <c>RunCapture</c> 返回后调用 <see cref="Release"/>。
     /// <para>
-    /// 这使"采样器不可能在采集窗口内完成"成为<b>确定性事实</b>（与机器调度速度、<c>Thread.Sleep</c> 精度无关）。
-    /// 根因：旧的 <c>Thread.Sleep(3000)</c> 在 16× 过载下，等待线程可能被饿到 3s 之后才观察到 2s 超时，
-    /// 此刻慢采样器早已完成 → 得到非空统计 → "退化为空"断言偶发失败（那是调度抖动，不是有界等待失效）。
+    /// 这使"采样器不可能在采集窗口内完成"成为<b>确定性事实</b>（与机器调度速度、<c>Thread.Sleep</c> 精度无关），
+    /// 从而确定性地验证有界等待的退空行为。根因：旧的 <c>Thread.Sleep(3000)</c> 在慢环境下，等待线程可能被饿到
+    /// 3s 之后才观察到 2s 超时，此刻慢采样器早已完成 → 得到非空统计 → 误判。
+    /// </para>
+    /// <para>
+    /// <b>故意不用 <c>IDisposable</c>/<c>ManualResetEventSlim</c> 作为门</b>：在极端饥饿下，DPC 委托可能在
+    /// <b>测试方法返回之后</b>才被调度；若门已被 Dispose，采样器线程上的 <c>Wait</c> 会抛
+    /// <see cref="ObjectDisposedException"/> → 变成故障任务（未观察异常地雷）。改为"永不释放的 volatile 标志
+    /// + 有界自旋"，迟到被调度的委托也能安全通过、不会抛异常。
     /// </para>
     /// </summary>
     private sealed class GatedSlowSampler : IDpcSampler
     {
-        private readonly ManualResetEventSlim _release;
+        private volatile bool _released;
         private int _entered;
         private int _completed;
 
-        public GatedSlowSampler(ManualResetEventSlim release) => _release = release;
-
-        /// <summary>采样委托是否已被调度执行。</summary>
+        /// <summary>采样委托是否已被调度执行（仅作诊断，<b>不得</b>用于断言）。</summary>
         public bool Entered => Volatile.Read(ref _entered) != 0;
 
-        /// <summary>采样委托是否已返回（放行后才会置位）。</summary>
+        /// <summary>采样委托是否已返回（<see cref="Release"/> 之后才会置位）。</summary>
         public bool Completed => Volatile.Read(ref _completed) != 0;
+
+        /// <summary>放行门控。测试收尾时调用（尽力而为，不依赖采样器已被调度）。</summary>
+        public void Release() => _released = true;
 
         public Result<DpcStats> Sample(TimeSpan duration, CancellationToken cancellationToken)
         {
             Interlocked.Exchange(ref _entered, 1);
-            _release.Wait(TimeSpan.FromSeconds(30)); // 有界，异常路径下也不会永久占用线程
+
+            // 不可释放门控：有界自旋等待放行（无 IDisposable，迟到调度也不会抛异常）。
+            var spin = Stopwatch.StartNew();
+            while (!_released && spin.Elapsed < TimeSpan.FromSeconds(30))
+            {
+                Thread.Sleep(5);
+            }
+
             Interlocked.Exchange(ref _completed, 1);
             return Result<DpcStats>.Ok(new DpcStats(1.0, 3.0, 10));
         }
@@ -224,9 +245,10 @@ public sealed class DpcRaceStressTests
             }
         }
 
-        // 在宽裕上限内轮询等待"全部委托确实被执行"——这是与机器调度速度无关的竞态守护。
+        // 在宽裕上限（60s）内轮询等待"全部委托确实被执行"——这是与机器调度速度无关的竞态守护。
+        // 关键：绝不"瞬时断言"，因为在 1-CPU/饥饿线程池下委托可能就是调度得很慢。
         var deadline = Stopwatch.StartNew();
-        while (sampler.InvokedCount < runs && deadline.Elapsed < TimeSpan.FromSeconds(30))
+        while (sampler.InvokedCount < runs && deadline.Elapsed < TimeSpan.FromSeconds(60))
         {
             Thread.Sleep(20);
         }
@@ -248,14 +270,19 @@ public sealed class DpcRaceStressTests
         const int runs = 15;
         for (var i = 0; i < runs; i++)
         {
-            using var started = new ManualResetEventSlim(false);
+            // 不 Dispose：极端饥饿下委托可能在测试方法返回之后才 set；已释放的 event 会抛 ObjectDisposedException。
+            var started = new ManualResetEventSlim(false);
             var sampler = new SignalingSampler(new SchedulingJitterDpcSampler(), started);
-            var runner = new GatedRunner(started, lingerMs: 50);
+
+            // 宽裕上限门控（60s）：在 1-CPU / 饥饿线程池下也几乎必然等到委托被调度，
+            // 采集会一直保持到委托开始执行，从而确定性地保证"窗口内执行且统计不被丢弃"。
+            var runner = new GatedRunner(started, lingerMs: 50, startWait: TimeSpan.FromSeconds(60));
             var service = new CaptureService(runner, sampler, NullLogger<CaptureService>.Instance);
 
             var result = service.RunCapture("game.exe", 5, "本次测试");
 
             result.IsSuccess.Should().BeTrue(result.Error);
+            // 采集内部已（宽裕）轮询等到委托开始执行：此处委托必然已被执行、其统计必然被保留。
             sampler.InvokedCount.Should().Be(1, "DPC 采样委托必须被执行");
             result.Value!.Stats.Dpc.Samples.Should().BeGreaterThan(0,
                 "采样器已在采集窗口内执行并累积样本，其统计不得被采集瞬时结束丢弃");
@@ -266,10 +293,11 @@ public sealed class DpcRaceStressTests
     public void SlowIgnoringSampler_BoundedWait_DoesNotHang_AndFallsBackToEmpty()
     {
         // 采样器无视取消、且在测试放行前绝不返回：有界等待 2s 后必须放行主流程，绝不永久阻塞。
-        // 用"握手门控"替代 Thread.Sleep —— 采样器在采集期间不可能完成（确定性），
-        // 从而与机器调度速度无关地验证"超窗后退化为空统计"。
-        using var release = new ManualResetEventSlim(false);
-        var sampler = new GatedSlowSampler(release);
+        // 用"不可释放门控"替代 Thread.Sleep —— 采样器在采集期间不可能完成（确定性）。
+        //
+        // 断言只保留"与线程池调度速度无关"的量。尤其是**绝不**断言 sampler.Entered==true：
+        // task.Wait(2000) 不会帮助已入队的委托拿到线程池线程，饥饿时它可能整个窗口内都没被调度。
+        var sampler = new GatedSlowSampler();
         var service = new CaptureService(new FixedDelayRunner(0), sampler, NullLogger<CaptureService>.Instance);
 
         var sw = Stopwatch.StartNew();
@@ -278,27 +306,22 @@ public sealed class DpcRaceStressTests
 
         result.IsSuccess.Should().BeTrue(result.Error);
 
-        // 确定性"未挂起"证明：采集已返回，而慢采样器仍阻塞在握手上（尚未完成）
-        // → 有界等待没有、也不会等待无视取消的慢采样器真正结束。
-        sampler.Entered.Should().BeTrue("DPC 采样委托必须已被调度执行");
+        // (1) 采集已返回，而门控慢采样器不可能已完成 → 有界等待没有、也不会等待"无视取消的慢采样器"真正结束。
         sampler.Completed.Should().BeFalse("有界等待超窗后必须放行主流程，绝不等待慢采样器真正结束（否则即挂起）");
-
-        // 超窗后退化为空统计（不阻塞、不误报）。
+        // (2) 超窗退化为空统计（门控保证采样器不可能在窗口内完成）。
         result.Value!.Stats.Dpc.Samples.Should().Be(0, "未能在有界窗口内返回时退化为空统计（不阻塞）");
-
-        // 有界等待绝非无界：下界证明确实等待了有界上限（而非立即放弃），上界为"绝不挂起"兜底。
+        // (3) 有界等待绝非无界：下界证明确实等待了有界上限（任务未完成时 task.Wait(2000) 必阻塞满 2s），
+        //     上界为"绝不挂起"兜底。两项均与线程池调度无关。
         sw.Elapsed.TotalSeconds.Should().BeGreaterThan(1.5, "应确实等待了有界上限，而非提前放弃");
         sw.Elapsed.TotalSeconds.Should().BeLessThan(30, "有界等待绝不退化为无界等待/挂起");
 
-        // 收尾：放行采样器使其正常完成，避免线程与令牌源残留。
-        release.Set();
+        // 收尾（尽力而为、有界、**不断言**）：放行门控；迟到被调度的委托也能立即通过，不会抛异常。
+        sampler.Release();
         var deadline = Stopwatch.StartNew();
-        while (!sampler.Completed && deadline.Elapsed < TimeSpan.FromSeconds(10))
+        while (!sampler.Completed && deadline.Elapsed < TimeSpan.FromSeconds(5))
         {
             Thread.Sleep(10);
         }
-
-        sampler.Completed.Should().BeTrue("放行后采样器应正常完成");
     }
 
     [Fact]
