@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     下载并放置 PresentMon（帧时间捕获工具）到 ThirdParty\PresentMon。
 

@@ -23,6 +23,9 @@ AppPackages/
 *.nupkg
 *.snupkg
 
+# ---------- 一键发布产物（scripts/package-release.ps1 输出；体积大且可再生，不入库） ----------
+dist/
+
 # ---------- 测试 ----------
 TestResults/
 *.trx
@@ -69,7 +72,6 @@ $RECYCLE.BIN/
 
 # ---------- Node / 前端（若未来附带工具链） ----------
 node_modules/
-dist/
 
 # ---------- 本地项目数据（含签名私钥，严禁入库） ----------
 .workbuddy/
