@@ -16,6 +16,9 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
+    <!-- 顶栏：WPF-UI TitleBar（自带最小化 / 最大化 / 关闭 caption 按钮，T43 修复） -->
+    <ui:TitleBar Title="GameMode Pilot" Grid.Row="0" />
+
     <TabControl Grid.Row="1" TabStripPlacement="Left" Background="Transparent" BorderThickness="0">
       <TabItem Header="主界面">
         <views:MainView x:Name="MainViewControl" />

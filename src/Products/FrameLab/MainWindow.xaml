@@ -37,21 +37,23 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
-    <!-- 顶栏：产品名 + 主题切换 -->
-    <Grid Grid.Row="0" Margin="16,0">
-      <TextBlock Text="🧪 帧验 FrameLab" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
-      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-        <TextBlock Text="主题" VerticalAlignment="Center"
-                   Foreground="{DynamicResource PcOpt.Brush.TextSecondary}"
-                   Margin="0,0,8,0" />
-        <ComboBox x:Name="ThemeSelector" Width="120" VerticalAlignment="Center"
-                  SelectionChanged="OnThemeSelectionChanged">
-          <ComboBoxItem Content="跟随系统" IsSelected="True" />
-          <ComboBoxItem Content="浅色" />
-          <ComboBoxItem Content="深色" />
-        </ComboBox>
-      </StackPanel>
-    </Grid>
+    <!-- 顶栏：WPF-UI TitleBar（自带最小化 / 最大化 / 关闭 caption 按钮，T43 修复）；
+         主题选择器移入 TrailingContent，避免与 caption 按钮争位 -->
+    <ui:TitleBar Title="🧪 帧验 FrameLab" Grid.Row="0">
+      <ui:TitleBar.TrailingContent>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+          <TextBlock Text="主题" VerticalAlignment="Center"
+                     Foreground="{DynamicResource PcOpt.Brush.TextSecondary}"
+                     Margin="0,0,8,0" />
+          <ComboBox x:Name="ThemeSelector" Width="120" VerticalAlignment="Center"
+                    SelectionChanged="OnThemeSelectionChanged">
+            <ComboBoxItem Content="跟随系统" IsSelected="True" />
+            <ComboBoxItem Content="浅色" />
+            <ComboBoxItem Content="深色" />
+          </ComboBox>
+        </StackPanel>
+      </ui:TitleBar.TrailingContent>
+    </ui:TitleBar>
 
     <!-- 主体：左侧导航 + 右侧内容 -->
     <Grid Grid.Row="1">

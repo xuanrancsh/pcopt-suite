@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using PcOpt.Core;
+using PcOpt.Core.Native;
 
 namespace PcOpt.Products.FrameLab.Services;
 
@@ -115,7 +116,9 @@ public sealed class ProcessPresentMonRunner : IPresentMonRunner
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                StandardOutputEncoding = Encoding.UTF8,
+                // PresentMon 为原生控制台程序，stdout 按 OEM 代码页输出；
+                // 固定 UTF-8 会把其中文本解成乱码。stderr 仅用于诊断，保持 UTF-8。
+                StandardOutputEncoding = ConsoleOutputDecoder.OutputEncoding,
                 StandardErrorEncoding = Encoding.UTF8,
             };
 

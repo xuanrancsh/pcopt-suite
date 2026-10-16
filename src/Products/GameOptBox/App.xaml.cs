@@ -52,13 +52,22 @@ public partial class App : Application
         var logger = Services.GetRequiredService<ILogger<App>>();
 
         // 加载官方签名规则包（先验签，失败拒绝；合规红线 #9 由引擎在加载时校验）
-        var package = Services.GetRequiredService<RuleRepository>().LoadPackage();
+        var repository = Services.GetRequiredService<RuleRepository>();
+        var package = repository.LoadPackage();
+        string? rulesWarning = null;
         if (package.IsSuccess)
         {
             logger.LogInformation("规则包加载完成：成功 {Ok} 条，失败 {Fail} 条", package.Value!.Loaded, package.Value.Failed);
+            if (package.Value.Loaded == 0)
+            {
+                // 目录 / 公钥 / 规则文件缺失：不再静默显示"共 0 项"（T43 修复）
+                rulesWarning = $"{repository.LastLoadError ?? "未加载到任何优化规则"}。请保持 rules 文件夹与 GameOptBox.exe 同级后重启；公钥 / 规则缺失时无法加载任何优化项。";
+                logger.LogWarning("规则包无可用规则：{Error}", repository.LastLoadError);
+            }
         }
         else
         {
+            rulesWarning = $"{package.Error}。请保持 rules 文件夹与 GameOptBox.exe 同级后重启；公钥 / 规则缺失时无法加载任何优化项。";
             logger.LogWarning("规则包加载失败：{Error}", package.Error);
         }
 
@@ -72,6 +81,12 @@ public partial class App : Application
         var mainWindow = Services.GetRequiredService<MainWindow>();
         MainWindow = mainWindow;
         mainWindow.Show();
+
+        if (rulesWarning is not null)
+        {
+            // 主窗口已显示后再弹 Toast（ToastHost 随主窗口挂载）
+            Services.GetRequiredService<INotificationService>().Notify(rulesWarning);
+        }
 
         if (recovery.IsSuccess && recovery.Value!.EntriesRestored > 0)
         {

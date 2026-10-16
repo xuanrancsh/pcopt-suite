@@ -97,6 +97,16 @@ public partial class App : Application
         MainWindow = mainWindow;
         mainWindow.Show();
 
+        // 裸 exe 运行（旁边没有 rules\games.yaml）时不再静默（T43 修复）：
+        // 此前 FindGamesDatabase() 返回 null 会静默降级为 NullProcessMatcher，用户无感知
+        if (ResourcePaths.FindGamesDatabase() is null)
+        {
+            const string MissingGamesDatabase =
+                "未找到游戏特征库 rules\\games.yaml，游戏识别不可用；请保持 rules 文件夹与 GameModePilot.exe 同级后重启。";
+            logger.LogWarning("{Message}", MissingGamesDatabase);
+            Services.GetRequiredService<ProductTrayService>().Notify("游戏识别不可用", MissingGamesDatabase);
+        }
+
         if (recovery.IsSuccess && recovery.Value!.EntriesRestored > 0)
         {
             Services.GetRequiredService<ProductTrayService>()

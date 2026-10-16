@@ -7,7 +7,7 @@
     <RootNamespace>PcOpt.Products.FrameLab</RootNamespace>
     <AssemblyName>FrameLab</AssemblyName>
     <Description>产品 C：帧时间诊断驱动的优化闭环（测量 + 诊断工作台）</Description>
-    <ApplicationIcon />
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

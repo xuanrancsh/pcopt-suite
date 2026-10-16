@@ -1,7 +1,6 @@
 // Copyright (c) 2026 pcopt-suite contributors. Licensed under the MIT License.
 using System.Diagnostics;
 using System.Globalization;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace PcOpt.Core.Native;
@@ -133,7 +132,9 @@ public sealed class PowerCfgController
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                StandardOutputEncoding = Encoding.UTF8,
+                // powercfg 在中文 Windows 按 OEM 代码页（936/GBK）输出中文方案名；
+                // 固定 UTF-8 会把中文解成乱码（GUID 却正常，极具迷惑性）。
+                StandardOutputEncoding = ConsoleOutputDecoder.OutputEncoding,
             };
 
             using var process = Process.Start(startInfo);

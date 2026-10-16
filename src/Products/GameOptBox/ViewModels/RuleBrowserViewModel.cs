@@ -30,6 +30,7 @@ public sealed partial class RuleBrowserViewModel : ObservableObject, IRefreshabl
             Categories.Add(category);
         }
 
+        UpdateLoadWarning();
         Search();
     }
 
@@ -63,8 +64,23 @@ public sealed partial class RuleBrowserViewModel : ObservableObject, IRefreshabl
     [ObservableProperty]
     private string _searchSummary = string.Empty;
 
+    /// <summary>
+    /// 规则加载警告（T43 修复）：规则为 0 且仓库记录了加载失败原因时显示；
+    /// 正常情况为空字符串，视图据此隐藏警告横幅。
+    /// </summary>
+    [ObservableProperty]
+    private string _loadWarning = string.Empty;
+
+    /// <summary>是否存在加载警告（驱动警告横幅显隐，配合 BoolToVis 转换器）。</summary>
+    [ObservableProperty]
+    private bool _hasLoadWarning;
+
     /// <inheritdoc/>
-    public void Refresh() => Search();
+    public void Refresh()
+    {
+        UpdateLoadWarning();
+        Search();
+    }
 
     partial void OnSearchTextChanged(string value) => Search();
 
@@ -92,5 +108,19 @@ public sealed partial class RuleBrowserViewModel : ObservableObject, IRefreshabl
         SearchSummary = ShowSensitive
             ? $"共 {Items.Count} 项（含敏感项）· {LastSearchElapsedMs} ms"
             : $"共 {Items.Count} 项 · {LastSearchElapsedMs} ms · 危险项已折叠";
+    }
+
+    /// <summary>从仓库同步加载警告：无规则且有失败原因时展示，否则清空。</summary>
+    private void UpdateLoadWarning()
+    {
+        if (_rules.Count > 0 || string.IsNullOrEmpty(_rules.LastLoadError))
+        {
+            LoadWarning = string.Empty;
+            HasLoadWarning = false;
+            return;
+        }
+
+        LoadWarning = $"⚠ {_rules.LastLoadError}。请保持 rules 文件夹与 GameOptBox.exe 同级后重启。";
+        HasLoadWarning = true;
     }
 }

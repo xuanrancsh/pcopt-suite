@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Text;
 using PcOpt.Core;
+using PcOpt.Core.Native;
 
 namespace PcOpt.Products.GameOptBox.Services;
 
@@ -32,7 +33,9 @@ internal static class PowerShellRunner
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                StandardOutputEncoding = Encoding.UTF8,
+                // powershell.exe 控制台输出按 OEM 代码页（中文 Windows 为 936/GBK）；
+                // 固定 UTF-8 会把中文解成乱码（如 Appx 包名）。
+                StandardOutputEncoding = ConsoleOutputDecoder.OutputEncoding,
             };
 
             using var process = Process.Start(startInfo);

@@ -9,7 +9,17 @@
                  ResizeMode="NoResize"
                  ExtendsContentIntoTitleBar="True"
                  WindowBackdropType="Mica">
-  <Grid Margin="28,44,28,24">
+  <!-- 根布局：TitleBar 独占顶栏（自带最小化 / 关闭 caption 按钮；NoResize 故不显示最大化，T43 修复）；
+       内容 Grid 保持原有 28/44/24 边距语义（44px 顶部预留即由 TitleBar 占据） -->
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <ui:TitleBar Grid.Row="0" Title="GameMode Pilot · 首次使用" ShowMaximize="False" />
+
+    <Grid Grid.Row="1" Margin="28,0,28,24">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
@@ -44,5 +54,6 @@
       <Button Content="上一步" Command="{Binding BackCommand}" Margin="0,0,8,0" Padding="18,6" />
       <Button Content="下一步" Command="{Binding NextCommand}" Padding="18,6" />
     </StackPanel>
+    </Grid>
   </Grid>
 </ui:FluentWindow>

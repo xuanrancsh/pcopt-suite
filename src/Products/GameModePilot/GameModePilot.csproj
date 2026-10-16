@@ -7,7 +7,7 @@
     <RootNamespace>PcOpt.Products.GameModePilot</RootNamespace>
     <AssemblyName>GameModePilot</AssemblyName>
     <Description>产品 A：游戏模式自动调度器（常驻托盘守护）</Description>
-    <ApplicationIcon />
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

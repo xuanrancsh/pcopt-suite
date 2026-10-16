@@ -139,6 +139,30 @@ internal static class NativeMethods
     /// <summary>将 Win32 错误码格式化为可读消息（不含任何路径信息）。</summary>
     internal static string FormatWin32Error(int errorCode) => new Win32Exception(errorCode).Message;
 
+    // ---------- kernel32：代码页编解码（ConsoleOutputDecoder，T43） ----------
+
+    /// <summary>将多字节字符串（指定代码页）转换为 UTF-16；返回写入的宽字符数，0 表示失败。</summary>
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern int MultiByteToWideChar(
+        uint codePage,
+        uint dwFlags,
+        byte[] lpMultiByteStr,
+        int cbMultiByte,
+        char[]? lpWideCharStr,
+        int cchWideChar);
+
+    /// <summary>将 UTF-16 字符串转换为指定代码页的多字节表示；返回写入的字节数，0 表示失败。</summary>
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern int WideCharToMultiByte(
+        uint codePage,
+        uint dwFlags,
+        char[] lpWideCharStr,
+        int cchWideChar,
+        byte[]? lpMultiByteStr,
+        int cbMultiByteByte,
+        IntPtr lpDefaultChar,
+        IntPtr lpUsedDefaultChar);
+
     // ---------- kernel32：逻辑处理器拓扑（大小核，架构 3.3） ----------
 
     /// <summary>LOGICAL_PROCESSOR_RELATIONSHIP：RelationProcessorCore。</summary>

@@ -63,6 +63,13 @@ public sealed class RuleRepository
     public int Count => _qualified.Count;
 
     /// <summary>
+    /// 最近一次 <see cref="LoadPackage"/> 的加载失败原因（无可用规则时非空；成功加载 ≥1 条时为 null）。
+    /// 覆盖：规则目录缺失、公钥缺失、逐条验签 / 解析失败、目录为空等场景。
+    /// UI 据此在规则列表上方显示警告横幅，启动时据此弹 Toast——不再静默显示"共 0 项"。
+    /// </summary>
+    public string? LastLoadError { get; private set; }
+
+    /// <summary>
     /// 加载签名规则包：对目录下每个 <c>*.yaml</c> 读取原始字节与其同名 <c>.sig</c>，
     /// 经 <see cref="TweakEngine.LoadRulePackage"/> 验签 + 策略校验后注册。
     /// 单条失败不影响其余规则；全部失败也返回成功报告（UI 依据 Failures 提示）。
@@ -74,7 +81,15 @@ public sealed class RuleRepository
 
         if (string.IsNullOrWhiteSpace(_tweaksDirectory) || !Directory.Exists(_tweaksDirectory))
         {
-            return Result<RulePackageLoadReport>.Fail($"未找到随包的规则目录（{ResourcePaths.TweaksRelativeDirectory}）");
+            LastLoadError = $"未找到随包规则目录（{ResourcePaths.TweaksRelativeDirectory}）";
+            return Result<RulePackageLoadReport>.Fail(LastLoadError);
+        }
+
+        if (!_publicKeyAvailable)
+        {
+            // 公钥缺失：任何签名包都无法通过验签，提前明确失败原因
+            LastLoadError = "未找到规则公钥（rules\\public.key），无法验证官方签名规则包";
+            return Result<RulePackageLoadReport>.Fail(LastLoadError);
         }
 
         var yamlFiles = Directory.EnumerateFiles(_tweaksDirectory, "*.yaml", SearchOption.TopDirectoryOnly)
@@ -128,6 +143,13 @@ public sealed class RuleRepository
             var byCategory = string.Compare(a.Category, b.Category, StringComparison.CurrentCulture);
             return byCategory != 0 ? byCategory : string.CompareOrdinal(a.Id, b.Id);
         });
+
+        // 最近一次加载失败的诊断：成功 ≥1 条即视为可用（null）；否则给出最相关的原因
+        LastLoadError = loaded > 0
+            ? null
+            : failures.Count > 0
+                ? $"规则加载失败 {failures.Count} 条，例如：{failures[0]}"
+                : $"规则目录中没有任何规则文件（{_tweaksDirectory} 下未找到 *.yaml）";
 
         _logger.LogInformation("规则包加载：成功 {Ok}，失败 {Fail}（目录 {Dir}）", loaded, failures.Count, _tweaksDirectory);
         return Result<RulePackageLoadReport>.Ok(

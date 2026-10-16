@@ -7,7 +7,7 @@
     <RootNamespace>PcOpt.Products.GameOptBox</RootNamespace>
     <AssemblyName>GameOptBox</AssemblyName>
     <Description>产品 B：中文游戏党优化全家桶（手动工具箱）</Description>
-    <ApplicationIcon />
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
